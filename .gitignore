@@ -52,3 +52,50 @@ docker-compose*.yml
 *.env                     # ако ползваш .env за локални променливи
 *.log                     # лог файлове
 *.sqlite                  # локална DB sqlite (ако ползваш SQLite за dev)
+
+# Допълнителни .NET файлове
+*.tmp
+*.temp
+*.cache
+*.pdb                    # Debug symbols
+*.xml                    # XML documentation files
+*.doc                    # Documentation files
+
+# Test results
+TestResults/
+*.coverage
+*.coveragexml
+coverage/
+
+# Package managers
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Backup files
+*~
+*.bak
+*.backup
+
+# SQL Server database files
+*.mdf                    # SQL Server database files
+*.ldf                    # SQL Server log files
+*.ndf                    # SQL Server secondary data files
+
+# Windows generated files
+Thumbs.db                # Windows thumbnail cache
+desktop.ini              # Windows folder customization
+ehthumbs.db              # Windows thumbnail cache
+ehthumbs_vista.db        # Windows thumbnail cache
+
+# Additional .NET files
+*.vshost.exe             # Visual Studio hosting process
+*.vshost.exe.config      # Visual Studio hosting process config
+*.vshost.exe.manifest    # Visual Studio hosting process manifest
+
+# IIS Express
+.iisexpress/             # IIS Express configuration
+
+# Performance and profiling
+*.diagsession            # Visual Studio diagnostic session
+*.diagsession-ju         # Visual Studio diagnostic session
