@@ -1,0 +1,54 @@
+# === .NET / Visual Studio ===
+.vs/                      # Visual Studio workspace settings
+*.user                    # VS user options
+*.suo                     # VS solution user options
+*.userosscache            # VS cache
+*.sln.docstates           # VS doc states
+appsettings*.json
+
+/bin/                     # Build outputs
+/obj/                     # Intermediate files
+/*.exe                    # Executables
+/*.dll                    # Assemblies (при self-contained публикуване)
+/publish/                 # Публикувано приложение (ако ползваш папка publish)
+
+/**/*.[Rr]elease.*        # Release output
+/**/*.nupkg               # NuGet пакети
+*.nuspec                  # NuGet spec
+
+# EF Core Migrations snapshot (по желание)
+/Migrations/*Snapshot.cs
+
+# Rider
+.idea/
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# === User secrets (ако ползваш секрети) ===
+secrets.json
+
+# === Node / TailwindCSS ===
+/node_modules/            # npm пакети
+npm-debug.log*            # npm логове
+yarn-error.log*
+pnpm-debug.log*
+
+# Tailwind build (по желание; ако искаш да билдваш CSS в CI и да не качваш готовия файл)
+/wwwroot/css/tailwind.css
+
+# Lockfiles (ако ползваш искаш да ги версионираш, иначе можеш IGNORE)
+/package-lock.json
+/yarn.lock
+
+# === Docker ===
+Dockerfile
+docker-compose*.yml
+
+# === Misc ===
+*.env                     # ако ползваш .env за локални променливи
+*.log                     # лог файлове
+*.sqlite                  # локална DB sqlite (ако ползваш SQLite за dev)
