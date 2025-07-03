@@ -1,0 +1,187 @@
+@{
+    ViewData["Title"] = "Dashboard - Администратор";
+    var totalStudents = ViewBag.TotalStudents;
+    var totalTeachers = ViewBag.TotalTeachers;
+    var totalAssignments = ViewBag.TotalAssignments;
+    var totalSubmissions = ViewBag.TotalSubmissions;
+}
+
+<div class="space-y-6">
+    <!-- Welcome Section -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <i class="fas fa-cog text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-2xl font-bold text-gray-900">
+                    Административен панел
+                </h2>
+                <p class="text-gray-600">
+                    Управление на системата за оценяване
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Ученици</p>
+                    <p class="text-2xl font-semibold text-gray-900">@totalStudents</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-chalkboard-teacher text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Учители</p>
+                    <p class="text-2xl font-semibold text-gray-900">@totalTeachers</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <i class="fas fa-tasks text-yellow-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Задачи</p>
+                    <p class="text-2xl font-semibold text-gray-900">@totalAssignments</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="fas fa-file-code text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Решения</p>
+                    <p class="text-2xl font-semibold text-gray-900">@totalSubmissions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="/Admin/Users" class="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-user-cog text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Управление на потребители</h3>
+                    <p class="text-sm text-gray-500">Добавяне и редактиране на потребители</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="/Admin/ClassGroups" class="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-school text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Класове</h3>
+                    <p class="text-sm text-gray-500">Управление на класове и групи</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="/Admin/Modules" class="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="fas fa-book text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Предмети</h3>
+                    <p class="text-sm text-gray-500">Управление на предметни модули</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- System Information -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">
+                <i class="fas fa-info-circle mr-2 text-indigo-600"></i>Информация за системата
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-4">Технически детайли</h4>
+                    <dl class="space-y-3">
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-500">Версия:</dt>
+                            <dd class="text-sm text-gray-900">1.0.0</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-500">Платформа:</dt>
+                            <dd class="text-sm text-gray-900">ASP.NET Core 8.0</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-500">База данни:</dt>
+                            <dd class="text-sm text-gray-900">SQL Server</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm text-gray-500">Docker:</dt>
+                            <dd class="text-sm text-gray-900">Активен</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-4">Поддържани езици</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span class="text-sm text-gray-900">C# (.NET)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span class="text-sm text-gray-900">Python</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span class="text-sm text-gray-900">Java</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span class="text-sm text-gray-900">JavaScript</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

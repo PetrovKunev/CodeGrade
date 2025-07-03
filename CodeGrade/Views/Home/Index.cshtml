@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Начало";
+}
+
+<div class="bg-white">
+    <div class="relative isolate px-6 pt-14 lg:px-8">
+        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+            <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+        </div>
+        <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                    CodeGrade
+                </h1>
+                <p class="mt-6 text-lg leading-8 text-gray-600">
+                    Модерна система за автоматично оценяване на програмен код. 
+                    Подходяща за учители и ученици в сферата на програмирането.
+                </p>
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="/Home/StudentDashboard" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Вход
+                        </a>
+                        <a href="/Account/Register" class="text-sm font-semibold leading-6 text-gray-900">
+                            <i class="fas fa-user-plus mr-2"></i>Регистрация
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
+            <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"></div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-gray-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl lg:text-center">
+            <h2 class="text-base font-semibold leading-7 text-indigo-600">Функционалности</h2>
+            <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Всичко, което ви трябва за оценяване на код
+            </p>
+            <p class="mt-6 text-lg leading-8 text-gray-600">
+                CodeGrade предлага пълна функционалност за автоматично оценяване на програмен код с модерен интерфейс и мощни възможности.
+            </p>
+        </div>
+        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        <i class="fas fa-code text-indigo-600 text-xl"></i>
+                        Автоматично оценяване
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">Изпълнявайте код в изолирани Docker контейнери и получавайте мигновени резултати от тестови случаи.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        <i class="fas fa-users text-indigo-600 text-xl"></i>
+                        Управление на потребители
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">Роли за ученици, учители и администратори с различни права за достъп.</p>
+                    </dd>
+                </div>
+                <div class="flex flex-col">
+                    <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        <i class="fas fa-chart-bar text-indigo-600 text-xl"></i>
+                        Детайлни отчети
+                    </dt>
+                    <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p class="flex-auto">Следете прогреса на учениците с подробни статистики и графики.</p>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
