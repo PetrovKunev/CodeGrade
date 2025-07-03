@@ -66,7 +66,7 @@ namespace CodeGrade.Data
                 .HasOne(s => s.Student)
                 .WithMany(st => st.Submissions)
                 .HasForeignKey(s => s.StudentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Submission>()
                 .HasOne(s => s.Assignment)
@@ -84,13 +84,13 @@ namespace CodeGrade.Data
                 .HasOne(er => er.TestCase)
                 .WithMany()
                 .HasForeignKey(er => er.TestCaseId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Grade>()
                 .HasOne(g => g.Student)
                 .WithMany(s => s.Grades)
                 .HasForeignKey(g => g.StudentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Grade>()
                 .HasOne(g => g.Assignment)
