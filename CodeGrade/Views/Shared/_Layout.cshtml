@@ -27,74 +27,64 @@
     <div class="min-h-full">
         <nav class="bg-indigo-600 shadow-lg">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <div class="flex-shrink-0 flex items-center">
-                            <a href="/" class="text-white font-bold text-xl">
-                                <i class="fas fa-code mr-2"></i>CodeGrade
-                            </a>
-                        </div>
-                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <a href="/" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                <i class="fas fa-home mr-1"></i>Начало
-                            </a>
-                            @if (User.Identity?.IsAuthenticated == true)
-                            {
-                                @if (User.IsInRole("Teacher"))
-                                {
-                                    <a href="/Assignments" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-tasks mr-1"></i>Задачи
-                                    </a>
-                                    <a href="/Submissions" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-file-code mr-1"></i>Решения
-                                    </a>
-                                    <a href="/Grades" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-chart-bar mr-1"></i>Оценки
-                                    </a>
-                                }
-                                @if (User.IsInRole("Student"))
-                                {
-                                    <a href="/Assignments" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-tasks mr-1"></i>Задачи
-                                    </a>
-                                    <a href="/MySubmissions" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-history mr-1"></i>Моите решения
-                                    </a>
-                                    <a href="/MyGrades" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-chart-line mr-1"></i>Моите оценки
-                                    </a>
-                                }
-                                @if (User.IsInRole("Admin"))
-                                {
-                                    <a href="/Admin" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium">
-                                        <i class="fas fa-cog mr-1"></i>Администрация
-                                    </a>
-                                }
-                            }
-                        </div>
-                    </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center gap-6">
+                        <a href="/" class="text-white font-bold text-xl flex items-center">
+                            <i class="fas fa-code mr-2"></i>CodeGrade
+                        </a>
+                        <a href="/" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                            <i class="fas fa-home mr-1"></i>Начало
+                        </a>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <div class="ml-3 relative">
-                                <div class="flex items-center space-x-4">
-                                    <span class="text-white text-sm">@User.Identity.Name</span>
-                                    <a href="/Account/Logout" class="text-white hover:text-indigo-200 text-sm">
-                                        <i class="fas fa-sign-out-alt mr-1"></i>Изход
-                                    </a>
-                                </div>
-                            </div>
+                            @if (User.IsInRole("Teacher"))
+                            {
+                                <a href="/Assignments" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-tasks mr-1"></i>Задачи
+                                </a>
+                                <a href="/Submissions" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-file-code mr-1"></i>Решения
+                                </a>
+                                <a href="/Grades" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-chart-bar mr-1"></i>Оценки
+                                </a>
+                            }
+                            @if (User.IsInRole("Student"))
+                            {
+                                <a href="/Assignments" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-tasks mr-1"></i>Задачи
+                                </a>
+                                <a href="/MySubmissions" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-history mr-1"></i>Моите решения
+                                </a>
+                                <a href="/MyGrades" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-chart-line mr-1"></i>Моите оценки
+                                </a>
+                            }
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a href="/Admin" class="text-white hover:text-indigo-200 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                    <i class="fas fa-cog mr-1"></i>Администрация
+                                </a>
+                            }
+                        }
+                    </div>
+                    <div class="flex items-center gap-4">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <span class="text-white text-sm">@User.Identity.Name</span>
+                            <a href="/Account/Logout" class="text-white hover:text-indigo-200 text-sm flex items-center">
+                                <i class="fas fa-sign-out-alt mr-1"></i>Изход
+                            </a>
                         }
                         else
                         {
-                            <div class="flex space-x-4">
-                                <a href="/Account/Login" class="text-white hover:text-indigo-200 text-sm">
-                                    <i class="fas fa-sign-in-alt mr-1"></i>Вход
-                                </a>
-                                <a href="/Account/Register" class="text-white hover:text-indigo-200 text-sm">
-                                    <i class="fas fa-user-plus mr-1"></i>Регистрация
-                                </a>
-                            </div>
+                            <a href="/Account/Login" class="text-white hover:text-indigo-200 text-sm flex items-center">
+                                <i class="fas fa-sign-in-alt mr-1"></i>Вход
+                            </a>
+                            <a href="/Account/Register" class="text-white hover:text-indigo-200 text-sm flex items-center">
+                                <i class="fas fa-user-plus mr-1"></i>Регистрация
+                            </a>
                         }
                     </div>
                 </div>
