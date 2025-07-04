@@ -1,44 +1,202 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using CodeGrade.ViewModels;
+using CodeGrade.Models;
+using CodeGrade.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace CodeGrade.Controllers
 {
     public class AccountController : Controller
     {
-        [HttpGet]
-        public IActionResult Login()
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _context;
+
+        public AccountController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext context)
         {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _context = context;
+        }
+
+        [HttpGet]
+        public IActionResult Login(string? returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+            
             if (ModelState.IsValid)
             {
-                // TODO: Добавете логика за автентикация
-                return RedirectToAction("Index", "Home");
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                
+                if (result.Succeeded)
+                {
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (user != null)
+                    {
+                        // Redirect based on user role
+                        if (await _userManager.IsInRoleAsync(user, "Admin"))
+                        {
+                            return RedirectToAction("AdminDashboard", "Home");
+                        }
+                        else if (await _userManager.IsInRoleAsync(user, "Teacher"))
+                        {
+                            return RedirectToAction("TeacherDashboard", "Home");
+                        }
+                        else
+                        {
+                            return RedirectToAction("StudentDashboard", "Home");
+                        }
+                    }
+                    
+                    return RedirectToLocal(returnUrl);
+                }
+                
+                if (result.IsLockedOut)
+                {
+                    ModelState.AddModelError(string.Empty, "Акаунтът е временно заключен. Опитайте отново по-късно.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Невалиден имейл или парола.");
+                }
             }
+
             return View(model);
         }
 
         [HttpGet]
         public IActionResult Register()
         {
+            // Зареждаме класовете за dropdown
+            var classGroups = _context.ClassGroups.ToList();
+            ViewBag.ClassGroups = classGroups;
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            // Зареждаме класовете за dropdown при неуспешна регистрация
+            var classGroups = _context.ClassGroups.ToList();
+            ViewBag.ClassGroups = classGroups;
+
             if (ModelState.IsValid)
             {
-                // TODO: Добавете логика за регистрация
-                return RedirectToAction("Login");
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                
+                if (result.Succeeded)
+                {
+                    // Add user to selected role
+                    await _userManager.AddToRoleAsync(user, model.Role);
+                    
+                    if (model.Role == "Student")
+                    {
+                        // Create Student record
+                        var student = new Student
+                        {
+                            UserId = user.Id,
+                            StudentNumber = GenerateStudentNumber(),
+                            ClassGroupId = model.ClassGroupId,
+                            SubGroup = model.SubGroup
+                        };
+                        _context.Students.Add(student);
+                    }
+                    else if (model.Role == "Teacher")
+                    {
+                        // Create Teacher record
+                        var teacher = new Teacher
+                        {
+                            UserId = user.Id,
+                            Department = "Информатика",
+                            Title = "Преподавател"
+                        };
+                        
+                        _context.Teachers.Add(teacher);
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                    
+                    // Sign in the user
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    
+                    TempData["SuccessMessage"] = "Регистрацията е успешна! Добре дошли в CodeGrade.";
+                    
+                    // Redirect based on role
+                    if (model.Role == "Teacher")
+                    {
+                        return RedirectToAction("TeacherDashboard", "Home");
+                    }
+                    else
+                    {
+                        return RedirectToAction("StudentDashboard", "Home");
+                    }
+                }
+                
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
+
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        private string GenerateStudentNumber()
+        {
+            // Generate a unique student number (format: YYYY-XXXXX)
+            var year = DateTime.Now.Year;
+            var random = new Random();
+            var number = random.Next(10000, 99999);
+            return $"{year}-{number}";
+        }
+
+        private IActionResult RedirectToLocal(string? returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction("Index", "Home");
+            }
         }
     }
 } 

@@ -45,8 +45,41 @@
                 </div>
                 <div>
                     <label asp-for="ConfirmPassword" class="sr-only">Потвърди парола</label>
-                    <input asp-for="ConfirmPassword" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Потвърди парола" />
+                    <input asp-for="ConfirmPassword" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Потвърди парола" />
                     <span asp-validation-for="ConfirmPassword" class="text-red-500 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="Role" class="sr-only">Роля</label>
+                    <select asp-for="Role" id="roleSelect" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
+                        <option value="Student">Студент</option>
+                        <option value="Teacher">Преподавател</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-red-500 text-sm"></span>
+                </div>
+                <div id="studentFields" style="display:@((Model.Role == null || Model.Role == "Student") ? "block" : "none")">
+                    <div>
+                        <label asp-for="ClassGroupId" class="sr-only">Клас</label>
+                        <select asp-for="ClassGroupId" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
+                            <option value="">Избери клас</option>
+                            @foreach (var group in ViewBag.ClassGroups)
+                            {
+                                @if (Model.ClassGroupId == group.Id)
+                                {
+                                    <option value="@group.Id" selected>@group.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@group.Id">@group.Name</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ClassGroupId" class="text-red-500 text-sm"></span>
+                    </div>
+                    <div>
+                        <label asp-for="SubGroup" class="sr-only">Група (по желание)</label>
+                        <input asp-for="SubGroup" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Група (по желание)" />
+                        <span asp-validation-for="SubGroup" class="text-red-500 text-sm"></span>
+                    </div>
                 </div>
             </div>
 
@@ -65,5 +98,18 @@
 </div>
 
 @section Scripts {
+    <script>
+        const roleSelect = document.getElementById('roleSelect');
+        const studentFields = document.getElementById('studentFields');
+        function toggleStudentFields() {
+            if (roleSelect.value === 'Student') {
+                studentFields.style.display = 'block';
+            } else {
+                studentFields.style.display = 'none';
+            }
+        }
+        roleSelect.addEventListener('change', toggleStudentFields);
+        toggleStudentFields();
+    </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 } 

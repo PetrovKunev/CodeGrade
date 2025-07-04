@@ -14,8 +14,11 @@ namespace CodeGrade.Models
         [StringLength(20)]
         public string StudentNumber { get; set; } = string.Empty;
         
-        public int ClassGroupId { get; set; }
-        public ClassGroup ClassGroup { get; set; } = null!;
+        public int? ClassGroupId { get; set; }
+        public ClassGroup? ClassGroup { get; set; }
+        
+        [StringLength(50)]
+        public string? SubGroup { get; set; }
         
         // Navigation properties
         public ICollection<Grade> Grades { get; set; } = new List<Grade>();

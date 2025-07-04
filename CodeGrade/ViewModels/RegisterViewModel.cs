@@ -29,5 +29,16 @@ namespace CodeGrade.ViewModels
         [Display(Name = "Потвърди парола")]
         [Compare("Password", ErrorMessage = "Паролите не съвпадат")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Моля изберете роля")]
+        [Display(Name = "Роля")]
+        public string Role { get; set; } = "Student";
+
+        // Нови полета за студент
+        [Display(Name = "Клас")]
+        public int? ClassGroupId { get; set; }
+
+        [Display(Name = "Група (по желание)")]
+        public string? SubGroup { get; set; }
     }
 } 
