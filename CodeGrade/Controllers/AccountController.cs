@@ -82,7 +82,7 @@ namespace CodeGrade.Controllers
             // Зареждаме класовете за dropdown
             var classGroups = _context.ClassGroups.ToList();
             ViewBag.ClassGroups = classGroups;
-            return View();
+            return View(new RegisterViewModel());
         }
 
         [HttpPost]
