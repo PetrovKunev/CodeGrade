@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CodeGrade.ViewModels
 {
-    public class RegisterViewModel
+    public class RegisterViewModel : IValidatableObject
     {
         [Required(ErrorMessage = "Името е задължително")]
         [StringLength(50, ErrorMessage = "Името не може да бъде по-дълго от 50 символа")]
@@ -41,9 +41,24 @@ namespace CodeGrade.ViewModels
         [Display(Name = "Група (по желание)")]
         public string? SubGroup { get; set; }
 
-        [Required(ErrorMessage = "Номерът в клас е задължителен")]
         [Range(1, 30, ErrorMessage = "Номерът в клас трябва да е между 1 и 30")]
         [Display(Name = "Номер в клас")]
         public int? ClassNumber { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Role == "Student")
+            {
+                if (!ClassNumber.HasValue)
+                {
+                    yield return new ValidationResult("Номерът в клас е задължителен за студенти", new[] { nameof(ClassNumber) });
+                }
+                
+                if (!ClassGroupId.HasValue)
+                {
+                    yield return new ValidationResult("Класът е задължителен за студенти", new[] { nameof(ClassGroupId) });
+                }
+            }
+        }
     }
 } 

@@ -93,8 +93,27 @@ namespace CodeGrade.Controllers
             var classGroups = _context.ClassGroups.ToList();
             ViewBag.ClassGroups = classGroups;
 
+            // Debug: Log model data
+            System.Diagnostics.Debug.WriteLine($"Role: {model.Role}");
+            System.Diagnostics.Debug.WriteLine($"ClassNumber: {model.ClassNumber}");
+            System.Diagnostics.Debug.WriteLine($"ClassGroupId: {model.ClassGroupId}");
+
+            // Debug: Log validation errors
+            if (!ModelState.IsValid)
+            {
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Validation Error: {error.ErrorMessage}");
+                    }
+                }
+                return View(model);
+            }
+
             if (ModelState.IsValid)
             {
+                System.Diagnostics.Debug.WriteLine("ModelState is valid, proceeding with user creation");
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -107,6 +126,7 @@ namespace CodeGrade.Controllers
 
                 var result = await _userManager.CreateAsync(user, model.Password);
                 
+                System.Diagnostics.Debug.WriteLine($"User creation result: {result.Succeeded}");
                 if (result.Succeeded)
                 {
                     // Add user to selected role
