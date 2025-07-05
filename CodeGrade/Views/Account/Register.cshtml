@@ -80,6 +80,11 @@
                         <input asp-for="SubGroup" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Група (по желание)" />
                         <span asp-validation-for="SubGroup" class="text-red-500 text-sm"></span>
                     </div>
+                    <div>
+                        <label asp-for="ClassNumber" class="sr-only">Номер в клас</label>
+                        <input asp-for="ClassNumber" type="number" min="1" max="30" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Номер в клас" required />
+                        <span asp-validation-for="ClassNumber" class="text-red-500 text-sm"></span>
+                    </div>
                 </div>
             </div>
 

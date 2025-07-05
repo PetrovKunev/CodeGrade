@@ -40,5 +40,10 @@ namespace CodeGrade.ViewModels
 
         [Display(Name = "Група (по желание)")]
         public string? SubGroup { get; set; }
+
+        [Required(ErrorMessage = "Номерът в клас е задължителен")]
+        [Range(1, 30, ErrorMessage = "Номерът в клас трябва да е между 1 и 30")]
+        [Display(Name = "Номер в клас")]
+        public int? ClassNumber { get; set; }
     }
 } 

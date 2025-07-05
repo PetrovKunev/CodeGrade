@@ -118,9 +118,10 @@ namespace CodeGrade.Controllers
                         var student = new Student
                         {
                             UserId = user.Id,
-                            StudentNumber = GenerateStudentNumber(),
+                            StudentNumber = model.ClassNumber.HasValue ? model.ClassNumber.Value.ToString() : string.Empty,
                             ClassGroupId = model.ClassGroupId,
-                            SubGroup = model.SubGroup
+                            SubGroup = model.SubGroup,
+                            ClassNumber = model.ClassNumber ?? 0
                         };
                         _context.Students.Add(student);
                     }
@@ -164,27 +165,16 @@ namespace CodeGrade.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Logout()
+        [HttpGet]
+        public IActionResult Logout()
         {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Index", "Home");
+            return View();
         }
 
         [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
-        }
-
-        private string GenerateStudentNumber()
-        {
-            // Generate a unique student number (format: YYYY-XXXXX)
-            var year = DateTime.Now.Year;
-            var random = new Random();
-            var number = random.Next(10000, 99999);
-            return $"{year}-{number}";
         }
 
         private IActionResult RedirectToLocal(string? returnUrl)

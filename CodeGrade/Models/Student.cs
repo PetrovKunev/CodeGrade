@@ -20,6 +20,10 @@ namespace CodeGrade.Models
         [StringLength(50)]
         public string? SubGroup { get; set; }
         
+        [Required]
+        [Range(1, 30)]
+        public int ClassNumber { get; set; }
+        
         // Navigation properties
         public ICollection<Grade> Grades { get; set; } = new List<Grade>();
         public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
