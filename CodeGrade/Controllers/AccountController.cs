@@ -166,8 +166,9 @@ namespace CodeGrade.Controllers
         }
 
         [HttpGet]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            await _signInManager.SignOutAsync();
             return View();
         }
 
