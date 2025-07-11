@@ -103,6 +103,10 @@ namespace CodeGrade.Data
                 .HasIndex(s => s.StudentNumber)
                 .IsUnique();
 
+            builder.Entity<Student>()
+                .HasIndex(s => new { s.ClassGroupId, s.ClassNumber })
+                .IsUnique();
+
             builder.Entity<Submission>()
                 .HasIndex(s => new { s.StudentId, s.AssignmentId, s.SubmittedAt });
 

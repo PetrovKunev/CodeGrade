@@ -1,0 +1,234 @@
+@model CodeGrade.Models.Assignment
+@{
+    ViewData["Title"] = "Детайли на задача";
+}
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">@Model.Title</h2>
+                <p class="text-gray-600 mt-1">@Model.SubjectModule?.Name</p>
+            </div>
+            <div class="flex space-x-2">
+                <a href="/Assignments/Edit/@Model.Id" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Редактирай
+                </a>
+                <a href="/Assignments" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Назад
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Assignment Info -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Информация за задачата</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-700">Краен срок:</span>
+                            <span class="text-gray-600">@Model.DueDate.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Максимални точки:</span>
+                            <span class="text-gray-600">@Model.MaxPoints</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Времеви лимит:</span>
+                            <span class="text-gray-600">@Model.TimeLimit сек</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Лимит на паметта:</span>
+                            <span class="text-gray-600">@Model.MemoryLimit MB</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Статус:</span>
+                            @if (Model.IsActive)
+                            {
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Активна
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Неактивна
+                                </span>
+                            }
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Създадена:</span>
+                            <span class="text-gray-600">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Описание</h3>
+                        <p class="text-gray-600 whitespace-pre-wrap">@Model.Description</p>
+                    </div>
+                }
+
+                <!-- Problem Statement -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Условие на задачата</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <pre class="whitespace-pre-wrap text-gray-700">@Model.ProblemStatement</pre>
+                    </div>
+                </div>
+
+                <!-- Test Cases -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Тестови случаи (@Model.TestCases.Count)</h3>
+                    <div class="space-y-4">
+                        @foreach (var testCase in Model.TestCases.OrderBy(tc => tc.Id))
+                        {
+                            <div class="border border-gray-200 rounded-lg p-4 @(testCase.IsHidden ? "bg-yellow-50" : "bg-white")">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="font-medium text-gray-900">
+                                        Тест @(Model.TestCases.OrderBy(tc => tc.Id).ToList().IndexOf(testCase) + 1)
+                                        <span class="text-sm text-gray-500">(@testCase.Points точки)</span>
+                                    </h4>
+                                    @if (testCase.IsHidden)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <i class="fas fa-eye-slash mr-1"></i>Скрит
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-eye mr-1"></i>Публичен
+                                        </span>
+                                    }
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Вход:</label>
+                                        <pre class="bg-gray-100 rounded p-2 text-sm text-gray-700 overflow-x-auto">@testCase.Input</pre>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Очакван изход:</label>
+                                        <pre class="bg-gray-100 rounded p-2 text-sm text-gray-700 overflow-x-auto">@testCase.ExpectedOutput</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Statistics -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Статистики</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Общо решения:</span>
+                            <span class="text-sm font-medium text-gray-900">@Model.Submissions.Count</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Тестови случаи:</span>
+                            <span class="text-sm font-medium text-gray-900">@Model.TestCases.Count</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Публични тестове:</span>
+                            <span class="text-sm font-medium text-gray-900">@Model.TestCases.Count(tc => !tc.IsHidden)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Скрити тестове:</span>
+                            <span class="text-sm font-medium text-gray-900">@Model.TestCases.Count(tc => tc.IsHidden)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Действия</h3>
+                    <div class="space-y-2">
+                        <a href="/Assignments/Edit/@Model.Id" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center">
+                            <i class="fas fa-edit mr-2"></i>Редактирай
+                        </a>
+                        <a href="/Submissions?assignmentId=@Model.Id" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                            <i class="fas fa-file-code mr-2"></i>Виж решения
+                        </a>
+                        <a href="/Grades?assignmentId=@Model.Id" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
+                            <i class="fas fa-chart-bar mr-2"></i>Виж оценки
+                        </a>
+                        @if (Model.IsActive)
+                        {
+                            <button onclick="toggleAssignmentStatus(@Model.Id, false)" class="w-full bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors flex items-center justify-center">
+                                <i class="fas fa-pause mr-2"></i>Деактивирай
+                            </button>
+                        }
+                        else
+                        {
+                            <button onclick="toggleAssignmentStatus(@Model.Id, true)" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
+                                <i class="fas fa-play mr-2"></i>Активирай
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Time Info -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Времеви рамки</h3>
+                    <div class="space-y-2 text-sm">
+                        @{
+                            var timeRemaining = Model.DueDate - DateTime.UtcNow;
+                            var isOverdue = timeRemaining.TotalSeconds <= 0;
+                        }
+                        
+                        @if (isOverdue)
+                        {
+                            <div class="text-red-600">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                Срокът е изтекъл преди @Math.Abs(timeRemaining.Days) дни
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-green-600">
+                                <i class="fas fa-clock mr-1"></i>
+                                Остават @timeRemaining.Days дни, @timeRemaining.Hours часа
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleAssignmentStatus(assignmentId, isActive) {
+            if (confirm('Сигурни ли сте, че искате да ' + (isActive ? 'активирате' : 'деактивирате') + ' тази задача?')) {
+                // This would need to be implemented as a separate action
+                fetch('/Assignments/ToggleStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ id: assignmentId, isActive: isActive })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Грешка при промяна на статуса');
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -111,6 +111,20 @@ namespace CodeGrade.Controllers
                 return View(model);
             }
 
+            // Check for duplicate ClassNumber within the same ClassGroup for students
+            if (model.Role == "Student" && model.ClassGroupId.HasValue && model.ClassNumber.HasValue)
+            {
+                var existingStudent = await _context.Students
+                    .FirstOrDefaultAsync(s => s.ClassGroupId == model.ClassGroupId && s.ClassNumber == model.ClassNumber);
+                
+                if (existingStudent != null)
+                {
+                    ModelState.AddModelError(nameof(model.ClassNumber), 
+                        $"Ученик с номер {model.ClassNumber} вече съществува в този клас.");
+                    return View(model);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 System.Diagnostics.Debug.WriteLine("ModelState is valid, proceeding with user creation");

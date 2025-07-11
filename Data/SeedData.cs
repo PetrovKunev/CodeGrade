@@ -131,7 +131,8 @@ namespace CodeGrade.Data
                     {
                         UserId = studentUser.Id,
                         StudentNumber = "2024001",
-                        ClassGroupId = firstClassGroup.Id
+                        ClassGroupId = firstClassGroup.Id,
+                        ClassNumber = 1
                     };
 
                     context.Students.Add(student);

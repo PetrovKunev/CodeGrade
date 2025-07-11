@@ -45,15 +45,17 @@
                             </div>
                             
                             <div class="flex justify-between items-center">
-                                <a href="/Assignments/Details/@assignment.Id" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                                    <i class="fas fa-eye mr-1"></i>Преглед
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">
+                                        <i class="fas fa-star mr-1"></i>@assignment.MaxPoints точки
+                                    </span>
+                                    <span class="text-sm text-gray-600">
+                                        <i class="fas fa-stopwatch mr-1"></i>@assignment.TimeLimit сек
+                                    </span>
+                                </div>
+                                <a href="/Assignments/Details/@assignment.Id" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">
+                                    <i class="fas fa-eye mr-1"></i>Виж детайли
                                 </a>
-                                @if (assignment.DueDate > DateTime.UtcNow)
-                                {
-                                    <a href="/Submissions/Create/@assignment.Id" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">
-                                        <i class="fas fa-upload mr-1"></i>Предай решение
-                                    </a>
-                                }
                             </div>
                         </div>
                     </div>

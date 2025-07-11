@@ -34,7 +34,7 @@ namespace CodeGrade.Services
                 var imageName = GetImageName(language);
                 
                 // Create container
-                var container = await CreateContainerAsync(containerName, imageName, code, testCase.Input, timeLimit, memoryLimit);
+                var container = await CreateContainerAsync(containerName, imageName, code, testCase.Input, timeLimit, memoryLimit, language);
                 
                 // Start container
                 await _dockerClient.Containers.StartContainerAsync(container.ID, new ContainerStartParameters());
@@ -100,13 +100,14 @@ namespace CodeGrade.Services
             string code, 
             string input, 
             int timeLimit, 
-            int memoryLimit)
+            int memoryLimit,
+            string language)
         {
             var response = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
             {
                 Name = containerName,
                 Image = imageName,
-                Cmd = GetExecutionCommand(code, input),
+                Cmd = GetExecutionCommand(code, input, language),
                 WorkingDir = "/workspace",
                 HostConfig = new HostConfig
                 {
@@ -192,11 +193,19 @@ namespace CodeGrade.Services
             };
         }
 
-        private string[] GetExecutionCommand(string code, string input)
+        private string[] GetExecutionCommand(string code, string input, string language)
         {
-            // This would need to be implemented based on the specific language
-            // For now, return a basic command
-            return new[] { "echo", "Not implemented yet" };
+            var escapedCode = code.Replace("'", "'\"'\"'");
+            var escapedInput = input?.Replace("'", "'\"'\"'") ?? "";
+            
+            return language.ToLower() switch
+            {
+                "csharp" => new[] { "/bin/bash", "/workspace/scripts/run-csharp.sh", escapedCode, escapedInput },
+                "python" => new[] { "/bin/bash", "/workspace/scripts/run-python.sh", escapedCode, escapedInput },
+                "java" => new[] { "/bin/bash", "/workspace/scripts/run-java.sh", escapedCode, escapedInput },
+                "javascript" => new[] { "/bin/bash", "/workspace/scripts/run-javascript.sh", escapedCode, escapedInput },
+                _ => throw new ArgumentException($"Unsupported language: {language}")
+            };
         }
 
         private ExecutionStatus DetermineStatus(ContainerLogs logs, int timeLimit, int memoryLimit)

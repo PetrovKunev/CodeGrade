@@ -1,0 +1,128 @@
+@model CodeGrade.Models.Assignment
+@{
+    ViewData["Title"] = "Изтриване на задача";
+}
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-red-600">Изтриване на задача</h2>
+            <p class="text-gray-600 mt-1">Сигурни ли сте, че искате да изтриете тази задача? Това действие е необратимо.</p>
+        </div>
+
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-500 text-xl mr-3"></i>
+                <div>
+                    <h3 class="text-red-800 font-medium">Внимание!</h3>
+                    <p class="text-red-700 text-sm mt-1">
+                        Изтриването на задачата ще премахне всички свързани данни, включително:
+                    </p>
+                    <ul class="text-red-700 text-sm mt-2 list-disc list-inside">
+                        <li>Всички тестови случаи</li>
+                        <li>Всички решения от учениците</li>
+                        <li>Всички оценки и резултати</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-lg p-4 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Детайли на задачата</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Заглавие:</label>
+                    <p class="text-gray-900 font-medium">@Model.Title</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Модул:</label>
+                    <p class="text-gray-900">@Model.SubjectModule?.Name</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Краен срок:</label>
+                    <p class="text-gray-900">@Model.DueDate.ToString("dd.MM.yyyy HH:mm")</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Максимални точки:</label>
+                    <p class="text-gray-900">@Model.MaxPoints</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Статус:</label>
+                    @if (Model.IsActive)
+                    {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Активна
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Неактивна
+                        </span>
+                    }
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Създадена:</label>
+                    <p class="text-gray-900">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                </div>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Описание:</label>
+                    <p class="text-gray-900 mt-1">@Model.Description</p>
+                </div>
+            }
+            
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">Статистики:</label>
+                <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Тестови случаи:</span>
+                        <span class="font-medium text-gray-900">@Model.TestCases.Count</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Решения:</span>
+                        <span class="font-medium text-gray-900">@Model.Submissions.Count</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Публични тестове:</span>
+                        <span class="font-medium text-gray-900">@Model.TestCases.Count(tc => !tc.IsHidden)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4">
+            <a href="/Assignments/Details/@Model.Id" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Отмени
+            </a>
+            
+            <form asp-action="Delete" method="post" class="inline">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors" 
+                        onclick="return confirm('Сигурни ли сте, че искате да изтриете тази задача? Това действие е необратимо!')">
+                    <i class="fas fa-trash mr-2"></i>Изтрий задачата
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add additional confirmation for dangerous action
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!confirm('ПОСЛЕДНА ВЪЗМОЖНОСТ! Сигурни ли сте, че искате да изтриете тази задача и всички свързани данни?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+}
