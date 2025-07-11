@@ -24,19 +24,38 @@ namespace CodeGrade.Models
         public int? MemoryUsed { get; set; } // KB
         
         public string? ErrorMessage { get; set; }
+        public string? CompilerOutput { get; set; }
+        public string? RuntimeOutput { get; set; }
         
         public ExecutionStatus Status { get; set; }
+        
+        // Enhanced feedback properties
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string? DetailedErrorType { get; set; }
+        public int? LineNumber { get; set; }
+        public string? StackTrace { get; set; }
+        
+        // Comparison details
+        public bool? OutputTrimMatches { get; set; }
+        public bool? OutputCaseInsensitiveMatches { get; set; }
+        public string? DiffOutput { get; set; } // Formatted diff between expected and actual
     }
     
     public enum ExecutionStatus
     {
         Pending,
+        Queued,
+        Compiling,
         Running,
         Passed,
         Failed,
+        PartiallyCorrect,
         TimeLimitExceeded,
         MemoryLimitExceeded,
         RuntimeError,
-        CompilationError
+        CompilationError,
+        OutputFormatError,
+        SystemError
     }
 } 

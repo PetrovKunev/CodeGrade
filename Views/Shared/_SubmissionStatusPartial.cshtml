@@ -1,0 +1,237 @@
+@model CodeGrade.Models.Submission
+
+<div class="submission-status-container" data-submission-id="@Model.Id">
+    <div class="bg-white border rounded-lg p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-gray-900">
+                Решение #@Model.Id - @Model.Language.ToUpper()
+            </h4>
+            <div class="text-sm text-gray-500">
+                @Model.SubmittedAt.ToString("dd.MM.yyyy HH:mm")
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div class="submission-status mb-4" data-status="@Model.Status.ToString().ToLower()">
+            @switch (Model.Status)
+            {
+                case CodeGrade.Models.SubmissionStatus.Pending:
+                    <div class="flex items-center text-yellow-600">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 mr-2"></div>
+                        <span>В опашката за обработка...</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.Compiling:
+                    <div class="flex items-center text-blue-600">
+                        <div class="animate-pulse rounded-full h-4 w-4 bg-blue-600 mr-2"></div>
+                        <span>Компилиране на кода...</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.Running:
+                    <div class="flex items-center text-indigo-600">
+                        <div class="animate-bounce rounded-full h-4 w-4 bg-indigo-600 mr-2"></div>
+                        <span>Изпълнение на тестовете...</span>
+                        <div class="ml-2 text-sm" id="test-progress">
+                            <span class="test-current">0</span>/<span class="test-total">0</span>
+                        </div>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.Completed:
+                    <div class="flex items-center text-green-600">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>Завършено успешно</span>
+                        <span class="ml-2 text-sm">(@Model.Score точки)</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.CompilationError:
+                    <div class="flex items-center text-red-600">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span>Грешка при компилиране</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.RuntimeError:
+                    <div class="flex items-center text-red-600">
+                        <i class="fas fa-bug mr-2"></i>
+                        <span>Грешка при изпълнение</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.TimeLimitExceeded:
+                    <div class="flex items-center text-orange-600">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>Надвишен времеви лимит</span>
+                    </div>
+                    break;
+                case CodeGrade.Models.SubmissionStatus.MemoryLimitExceeded:
+                    <div class="flex items-center text-purple-600">
+                        <i class="fas fa-memory mr-2"></i>
+                        <span>Надвишен лимит на паметта</span>
+                    </div>
+                    break;
+            }
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div class="progress-bar bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: @GetProgressPercentage(Model.Status)%"></div>
+        </div>
+
+        <!-- Error Messages -->
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="bg-red-50 border border-red-200 rounded p-3 mb-4">
+                <div class="text-sm text-red-800">
+                    <strong>Грешка:</strong> @Model.ErrorMessage
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.CompilerOutput))
+        {
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                <details>
+                    <summary class="text-sm font-medium text-yellow-800 cursor-pointer">Изход от компилатора</summary>
+                    <pre class="mt-2 text-xs text-yellow-700 overflow-x-auto">@Model.CompilerOutput</pre>
+                </details>
+            </div>
+        }
+
+        <!-- Execution Results -->
+        @if (Model.ExecutionResults.Any())
+        {
+            <div class="mt-4">
+                <h5 class="font-medium text-gray-900 mb-3">Резултати от тестовете</h5>
+                @await Html.PartialAsync("_ExecutionResultsPartial", Model.ExecutionResults.ToList())
+            </div>
+        }
+
+        <!-- Action Buttons -->
+        <div class="flex justify-between items-center mt-4 pt-4 border-t">
+            <div class="text-sm text-gray-500">
+                @if (Model.ExecutionTime.HasValue)
+                {
+                    <span>Време: @Model.ExecutionTime ms</span>
+                }
+                @if (Model.MemoryUsed.HasValue)
+                {
+                    <span class="ml-4">Памет: @Model.MemoryUsed KB</span>
+                }
+            </div>
+            <div class="flex space-x-2">
+                <button class="view-code-btn text-indigo-600 hover:text-indigo-800 text-sm" data-submission-id="@Model.Id">
+                    <i class="fas fa-code mr-1"></i>Виж кода
+                </button>
+                @if (Model.Status == CodeGrade.Models.SubmissionStatus.Completed)
+                {
+                    <button class="download-results-btn text-green-600 hover:text-green-800 text-sm" data-submission-id="@Model.Id">
+                        <i class="fas fa-download mr-1"></i>Изтегли резултатите
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Code View Modal -->
+<div id="code-modal-@Model.Id" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-96 overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Код на решението</h3>
+                    <button class="close-modal text-gray-400 hover:text-gray-600" data-modal="code-modal-@Model.Id">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 overflow-auto">
+                <pre class="bg-gray-100 rounded p-4 text-sm overflow-x-auto"><code class="language-@Model.Language.ToLower()">@Model.Code</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private int GetProgressPercentage(CodeGrade.Models.SubmissionStatus status)
+    {
+        return status switch
+        {
+            CodeGrade.Models.SubmissionStatus.Pending => 10,
+            CodeGrade.Models.SubmissionStatus.Compiling => 30,
+            CodeGrade.Models.SubmissionStatus.Running => 70,
+            CodeGrade.Models.SubmissionStatus.Completed => 100,
+            CodeGrade.Models.SubmissionStatus.CompilationError => 30,
+            CodeGrade.Models.SubmissionStatus.RuntimeError => 70,
+            CodeGrade.Models.SubmissionStatus.TimeLimitExceeded => 70,
+            CodeGrade.Models.SubmissionStatus.MemoryLimitExceeded => 70,
+            _ => 0
+        };
+    }
+}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submissionId = @Model.Id;
+    
+    // View code functionality
+    document.querySelectorAll('.view-code-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = document.getElementById(`code-modal-${this.dataset.submissionId}`);
+            modal.classList.remove('hidden');
+        });
+    });
+    
+    // Close modal functionality
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = document.getElementById(this.dataset.modal);
+            modal.classList.add('hidden');
+        });
+    });
+    
+    // Download results functionality
+    document.querySelectorAll('.download-results-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            window.location.href = `/Submissions/DownloadResults/${this.dataset.submissionId}`;
+        });
+    });
+    
+    // Real-time status updates (if WebSocket connection is available)
+    if (typeof window.submissionHub !== 'undefined') {
+        window.submissionHub.on('SubmissionStatusUpdate', function(id, status, progress) {
+            if (id === submissionId) {
+                updateSubmissionStatus(status, progress);
+            }
+        });
+    }
+});
+
+function updateSubmissionStatus(status, progress) {
+    const container = document.querySelector(`[data-submission-id="${@Model.Id}"]`);
+    if (!container) return;
+    
+    const statusElement = container.querySelector('.submission-status');
+    const progressBar = container.querySelector('.progress-bar');
+    const testProgress = container.querySelector('#test-progress');
+    
+    // Update status display
+    statusElement.dataset.status = status.toLowerCase();
+    
+    // Update progress bar
+    let percentage = 0;
+    switch(status.toLowerCase()) {
+        case 'pending': percentage = 10; break;
+        case 'compiling': percentage = 30; break;
+        case 'running': percentage = 70; break;
+        case 'completed': percentage = 100; break;
+        default: percentage = 50; break;
+    }
+    
+    progressBar.style.width = percentage + '%';
+    
+    // Update test progress
+    if (progress && testProgress) {
+        testProgress.querySelector('.test-current').textContent = progress.current || 0;
+        testProgress.querySelector('.test-total').textContent = progress.total || 0;
+    }
+}
+</script>

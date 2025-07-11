@@ -1,0 +1,198 @@
+@model List<CodeGrade.Models.ExecutionResult>
+
+<div class="execution-results">
+    @if (Model != null && Model.Any())
+    {
+        <div class="space-y-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h4 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-chart-bar mr-2"></i>Обзор на резултатите
+                </h4>
+                
+                @{
+                    var totalTests = Model.Count;
+                    var passedTests = Model.Count(r => r.Status == CodeGrade.Models.ExecutionStatus.Passed);
+                    var totalPoints = Model.Sum(r => r.PointsEarned);
+                    var maxPoints = Model.Sum(r => r.TestCase?.Points ?? 0);
+                    var avgExecutionTime = Model.Where(r => r.ExecutionTime.HasValue).Average(r => r.ExecutionTime.Value);
+                }
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="bg-white rounded-lg p-3 border">
+                        <div class="text-2xl font-bold text-gray-900">@passedTests/@totalTests</div>
+                        <div class="text-sm text-gray-600">Успешни тестове</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border">
+                        <div class="text-2xl font-bold text-gray-900">@totalPoints/@maxPoints</div>
+                        <div class="text-sm text-gray-600">Точки</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border">
+                        <div class="text-2xl font-bold text-gray-900">@((totalPoints * 100 / Math.Max(maxPoints, 1)).ToString("F0"))%</div>
+                        <div class="text-sm text-gray-600">Успеваемост</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border">
+                        <div class="text-2xl font-bold text-gray-900">@((avgExecutionTime ?? 0).ToString("F0"))ms</div>
+                        <div class="text-sm text-gray-600">Ср. време</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Test Results -->
+            <div class="space-y-3">
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    var result = Model[i];
+                    var statusClass = result.Status switch
+                    {
+                        CodeGrade.Models.ExecutionStatus.Passed => "border-green-200 bg-green-50",
+                        CodeGrade.Models.ExecutionStatus.PartiallyCorrect => "border-yellow-200 bg-yellow-50",
+                        CodeGrade.Models.ExecutionStatus.Failed => "border-red-200 bg-red-50",
+                        CodeGrade.Models.ExecutionStatus.CompilationError => "border-red-200 bg-red-50",
+                        CodeGrade.Models.ExecutionStatus.RuntimeError => "border-red-200 bg-red-50",
+                        CodeGrade.Models.ExecutionStatus.TimeLimitExceeded => "border-orange-200 bg-orange-50",
+                        CodeGrade.Models.ExecutionStatus.MemoryLimitExceeded => "border-purple-200 bg-purple-50",
+                        _ => "border-gray-200 bg-gray-50"
+                    };
+                    
+                    var statusIcon = result.Status switch
+                    {
+                        CodeGrade.Models.ExecutionStatus.Passed => "fas fa-check-circle text-green-600",
+                        CodeGrade.Models.ExecutionStatus.PartiallyCorrect => "fas fa-exclamation-circle text-yellow-600",
+                        CodeGrade.Models.ExecutionStatus.Failed => "fas fa-times-circle text-red-600",
+                        CodeGrade.Models.ExecutionStatus.CompilationError => "fas fa-exclamation-triangle text-red-600",
+                        CodeGrade.Models.ExecutionStatus.RuntimeError => "fas fa-bug text-red-600",
+                        CodeGrade.Models.ExecutionStatus.TimeLimitExceeded => "fas fa-clock text-orange-600",
+                        CodeGrade.Models.ExecutionStatus.MemoryLimitExceeded => "fas fa-memory text-purple-600",
+                        _ => "fas fa-question-circle text-gray-600"
+                    };
+
+                    <div class="border @statusClass rounded-lg p-4" id="test-result-@i">
+                        <div class="flex justify-between items-center mb-3">
+                            <h5 class="font-medium text-gray-900 flex items-center">
+                                <i class="@statusIcon mr-2"></i>
+                                Тест @(i + 1)
+                                <span class="ml-2 text-sm text-gray-600">(@result.PointsEarned / @(result.TestCase?.Points ?? 0) точки)</span>
+                            </h5>
+                            <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                @if (result.ExecutionTime.HasValue)
+                                {
+                                    <span><i class="fas fa-stopwatch mr-1"></i>@(result.ExecutionTime)ms</span>
+                                }
+                                @if (result.MemoryUsed.HasValue)
+                                {
+                                    <span><i class="fas fa-memory mr-1"></i>@(result.MemoryUsed)KB</span>
+                                }
+                                <button class="toggle-details text-indigo-600 hover:text-indigo-800" data-target="details-@i">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Status Message -->
+                        @if (!string.IsNullOrEmpty(result.ErrorMessage))
+                        {
+                            <div class="mb-3 p-3 bg-red-100 border border-red-200 rounded text-red-800 text-sm">
+                                <strong>Грешка:</strong> @result.ErrorMessage
+                            </div>
+                        }
+
+                        <!-- Collapsible Details -->
+                        <div id="details-@i" class="hidden">
+                            <div class="space-y-4">
+                                <!-- Input/Output Comparison -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Вход:</label>
+                                        <pre class="bg-gray-100 border rounded p-2 text-sm overflow-x-auto">@(result.Input ?? "Няма вход")</pre>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Очакван изход:</label>
+                                        <pre class="bg-gray-100 border rounded p-2 text-sm overflow-x-auto">@(result.ExpectedOutput ?? "Няма очакван изход")</pre>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Получен изход:</label>
+                                    <pre class="@(result.IsCorrect ? "bg-green-100 border-green-200" : "bg-red-100 border-red-200") border rounded p-2 text-sm overflow-x-auto">@(result.ActualOutput ?? "Няма изход")</pre>
+                                </div>
+
+                                <!-- Detailed Comparison -->
+                                @if (!result.IsCorrect && !string.IsNullOrEmpty(result.DiffOutput))
+                                {
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Детайлни различия:</label>
+                                        <pre class="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm overflow-x-auto">@result.DiffOutput</pre>
+                                    </div>
+                                }
+
+                                <!-- Additional Match Types -->
+                                @if (!result.IsCorrect)
+                                {
+                                    <div class="flex flex-wrap gap-2 text-sm">
+                                        @if (result.OutputTrimMatches == true)
+                                        {
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <i class="fas fa-info-circle mr-1"></i>Съвпада след премахване на интервали
+                                            </span>
+                                        }
+                                        @if (result.OutputCaseInsensitiveMatches == true)
+                                        {
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <i class="fas fa-info-circle mr-1"></i>Съвпада без отчитане на регистъра
+                                            </span>
+                                        }
+                                    </div>
+                                }
+
+                                <!-- Execution Details -->
+                                @if (result.StartedAt.HasValue && result.CompletedAt.HasValue)
+                                {
+                                    <div class="text-xs text-gray-500 border-t pt-2">
+                                        Стартиран: @result.StartedAt.Value.ToString("HH:mm:ss.fff") | 
+                                        Завършен: @result.CompletedAt.Value.ToString("HH:mm:ss.fff") |
+                                        Общо време: @((result.CompletedAt.Value - result.StartedAt.Value).TotalMilliseconds.ToString("F0"))ms
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-flask text-2xl mb-2"></i>
+            <p>Няма резултати от изпълнение</p>
+        </div>
+    }
+</div>
+
+<style>
+.execution-results .hidden {
+    display: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle details functionality
+    document.querySelectorAll('.toggle-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = document.getElementById(this.dataset.target);
+            const icon = this.querySelector('i');
+            
+            if (target.classList.contains('hidden')) {
+                target.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                target.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        });
+    });
+});
+</script>

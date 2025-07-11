@@ -34,4 +34,16 @@ namespace CodeGrade.ViewModels
         public bool CanSubmit { get; set; } = true;
         public string TimeRemaining { get; set; } = string.Empty;
     }
+    
+    public class TestCodeRequest
+    {
+        [Required]
+        public int AssignmentId { get; set; }
+        
+        [Required]
+        public string Code { get; set; } = string.Empty;
+        
+        [Required]
+        public string Language { get; set; } = string.Empty;
+    }
 }

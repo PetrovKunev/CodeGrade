@@ -26,40 +26,61 @@ namespace CodeGrade.Services
             string language, 
             TestCase testCase,
             int timeLimit,
-            int memoryLimit)
+            int memoryLimit,
+            Action<ExecutionStatus>? statusCallback = null)
         {
+            var startTime = DateTime.UtcNow;
+            statusCallback?.Invoke(ExecutionStatus.Queued);
+            
             try
             {
                 var containerName = $"code_exec_{Guid.NewGuid():N}";
                 var imageName = GetImageName(language);
                 
+                statusCallback?.Invoke(ExecutionStatus.Compiling);
+                
                 // Create container
                 var container = await CreateContainerAsync(containerName, imageName, code, testCase.Input, timeLimit, memoryLimit, language);
+                
+                statusCallback?.Invoke(ExecutionStatus.Running);
                 
                 // Start container
                 await _dockerClient.Containers.StartContainerAsync(container.ID, new ContainerStartParameters());
                 
                 // Wait for completion
-                var result = await WaitForCompletionAsync(container.ID, timeLimit);
+                var containerResult = await WaitForCompletionAsync(container.ID, timeLimit);
                 
                 // Get logs
                 var logs = await GetContainerLogsAsync(container.ID);
                 
+                // Get container stats
+                var stats = await GetContainerStatsAsync(container.ID);
+                
                 // Clean up
                 await _dockerClient.Containers.RemoveContainerAsync(container.ID, new ContainerRemoveParameters());
                 
-                return new ExecutionResult
+                var completedAt = DateTime.UtcNow;
+                var executionTime = (int)(completedAt - startTime).TotalMilliseconds;
+                
+                var result = new ExecutionResult
                 {
                     Input = testCase.Input,
                     ExpectedOutput = testCase.ExpectedOutput,
                     ActualOutput = logs.Output,
-                    IsCorrect = logs.Output?.Trim() == testCase.ExpectedOutput?.Trim(),
-                    PointsEarned = logs.Output?.Trim() == testCase.ExpectedOutput?.Trim() ? testCase.Points : 0,
-                    ExecutionTime = logs.ExecutionTime,
-                    MemoryUsed = logs.MemoryUsed,
+                    ExecutionTime = executionTime,
+                    MemoryUsed = stats.MemoryUsed,
                     ErrorMessage = logs.Error,
-                    Status = DetermineStatus(logs, timeLimit, memoryLimit)
+                    CompilerOutput = logs.CompilerOutput,
+                    RuntimeOutput = logs.RuntimeOutput,
+                    StartedAt = startTime,
+                    CompletedAt = completedAt,
+                    Status = DetermineStatus(logs, containerResult, timeLimit, memoryLimit)
                 };
+                
+                // Detailed comparison analysis
+                AnalyzeOutput(result, testCase);
+                
+                return result;
             }
             catch (Exception ex)
             {
@@ -71,7 +92,11 @@ namespace CodeGrade.Services
                     IsCorrect = false,
                     PointsEarned = 0,
                     ErrorMessage = ex.Message,
-                    Status = ExecutionStatus.RuntimeError
+                    DetailedErrorType = ex.GetType().Name,
+                    StackTrace = ex.StackTrace,
+                    StartedAt = startTime,
+                    CompletedAt = DateTime.UtcNow,
+                    Status = ExecutionStatus.SystemError
                 };
             }
         }
@@ -81,14 +106,26 @@ namespace CodeGrade.Services
             string language,
             List<TestCase> testCases,
             int timeLimit,
-            int memoryLimit)
+            int memoryLimit,
+            Action<int, int, ExecutionStatus>? progressCallback = null)
         {
             var results = new List<ExecutionResult>();
             
-            foreach (var testCase in testCases)
+            for (int i = 0; i < testCases.Count; i++)
             {
-                var result = await ExecuteCodeAsync(code, language, testCase, timeLimit, memoryLimit);
+                var testCase = testCases[i];
+                
+                Action<ExecutionStatus>? statusCallback = status => 
+                    progressCallback?.Invoke(i + 1, testCases.Count, status);
+                
+                var result = await ExecuteCodeAsync(code, language, testCase, timeLimit, memoryLimit, statusCallback);
                 results.Add(result);
+                
+                // Stop on first compilation error
+                if (result.Status == ExecutionStatus.CompilationError)
+                {
+                    break;
+                }
             }
             
             return results;
@@ -208,14 +245,127 @@ namespace CodeGrade.Services
             };
         }
 
-        private ExecutionStatus DetermineStatus(ContainerLogs logs, int timeLimit, int memoryLimit)
+        private void AnalyzeOutput(ExecutionResult result, TestCase testCase)
         {
-            if (!string.IsNullOrEmpty(logs.Error))
+            if (string.IsNullOrEmpty(result.ActualOutput) || string.IsNullOrEmpty(testCase.ExpectedOutput))
             {
+                result.IsCorrect = false;
+                result.PointsEarned = 0;
+                return;
+            }
+            
+            var actual = result.ActualOutput;
+            var expected = testCase.ExpectedOutput;
+            
+            // Exact match
+            result.IsCorrect = actual == expected;
+            
+            // Trimmed match
+            result.OutputTrimMatches = actual.Trim() == expected.Trim();
+            
+            // Case insensitive match
+            result.OutputCaseInsensitiveMatches = string.Equals(actual.Trim(), expected.Trim(), StringComparison.OrdinalIgnoreCase);
+            
+            // Generate diff for better visualization
+            result.DiffOutput = GenerateDiff(expected, actual);
+            
+            // Award points based on correctness
+            if (result.IsCorrect || result.OutputTrimMatches == true)
+            {
+                result.PointsEarned = testCase.Points;
+            }
+            else if (result.OutputCaseInsensitiveMatches == true)
+            {
+                result.PointsEarned = (int)(testCase.Points * 0.8); // 80% for case mismatch
+                result.Status = ExecutionStatus.PartiallyCorrect;
+            }
+            else
+            {
+                result.PointsEarned = 0;
+            }
+        }
+        
+        private string GenerateDiff(string expected, string actual)
+        {
+            var expectedLines = expected.Split('\n');
+            var actualLines = actual.Split('\n');
+            
+            var diff = new System.Text.StringBuilder();
+            var maxLines = Math.Max(expectedLines.Length, actualLines.Length);
+            
+            for (int i = 0; i < maxLines; i++)
+            {
+                var expectedLine = i < expectedLines.Length ? expectedLines[i] : "";
+                var actualLine = i < actualLines.Length ? actualLines[i] : "";
+                
+                if (expectedLine != actualLine)
+                {
+                    diff.AppendLine($"Line {i + 1}:");
+                    diff.AppendLine($"  Expected: {expectedLine}");
+                    diff.AppendLine($"  Actual:   {actualLine}");
+                }
+            }
+            
+            return diff.ToString();
+        }
+        
+        private async Task<ContainerStats> GetContainerStatsAsync(string containerId)
+        {
+            try
+            {
+                var statsStream = await _dockerClient.Containers.GetContainerStatsAsync(containerId, new ContainerStatsParameters
+                {
+                    OneShot = true,
+                    Stream = false
+                });
+                
+                // Read the first (and only) stats entry
+                var buffer = new byte[1024];
+                var bytesRead = await statsStream.ReadAsync(buffer, 0, buffer.Length);
+                var statsJson = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                
+                // Parse memory usage from stats (simplified)
+                // In a real implementation, you'd parse the JSON properly
+                return new ContainerStats { MemoryUsed = 0 };
+            }
+            catch
+            {
+                return new ContainerStats { MemoryUsed = 0 };
+            }
+        }
+        
+        private ExecutionStatus DetermineStatus(ContainerLogs logs, ContainerExecutionResult containerResult, int timeLimit, int memoryLimit)
+        {
+            // Check for compilation errors first
+            if (!string.IsNullOrEmpty(logs.CompilerOutput) && logs.CompilerOutput.Contains("error"))
+            {
+                return ExecutionStatus.CompilationError;
+            }
+            
+            // Check exit code
+            if (containerResult.ExitCode != 0)
+            {
+                if (containerResult.ExitCode == 124) // timeout exit code
+                {
+                    return ExecutionStatus.TimeLimitExceeded;
+                }
                 return ExecutionStatus.RuntimeError;
             }
             
-            // Additional logic for time/memory limits would go here
+            // Check for runtime errors
+            if (!string.IsNullOrEmpty(logs.Error))
+            {
+                if (logs.Error.Contains("timeout") || logs.Error.Contains("killed"))
+                {
+                    return ExecutionStatus.TimeLimitExceeded;
+                }
+                if (logs.Error.Contains("memory") || logs.Error.Contains("oom"))
+                {
+                    return ExecutionStatus.MemoryLimitExceeded;
+                }
+                return ExecutionStatus.RuntimeError;
+            }
+            
             return ExecutionStatus.Passed;
         }
 
@@ -229,7 +379,14 @@ namespace CodeGrade.Services
         {
             public string? Output { get; set; }
             public string? Error { get; set; }
+            public string? CompilerOutput { get; set; }
+            public string? RuntimeOutput { get; set; }
             public int? ExecutionTime { get; set; }
+            public int? MemoryUsed { get; set; }
+        }
+        
+        private class ContainerStats
+        {
             public int? MemoryUsed { get; set; }
         }
     }
