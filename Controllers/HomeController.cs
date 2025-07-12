@@ -61,7 +61,7 @@ public class HomeController : Controller
 
         var activeAssignments = await _context.Assignments
             .Include(a => a.SubjectModule)
-            .Where(a => a.IsActive && a.DueDate > DateTime.UtcNow)
+            .Where(a => a.IsActive && a.DueDate > DateTime.UtcNow && a.ClassGroupId == student.ClassGroupId)
             .OrderBy(a => a.DueDate)
             .Take(5)
             .ToListAsync();

@@ -30,6 +30,14 @@
                     </div>
 
                     <div>
+                        <label asp-for="ClassGroupId" class="block text-sm font-medium text-gray-700"></label>
+                        <select asp-for="ClassGroupId" asp-items="@(new SelectList(Model.AvailableClassGroups, "Id", "Name", Model.ClassGroupId))" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">Изберете клас</option>
+                        </select>
+                        <span asp-validation-for="ClassGroupId" class="text-red-600 text-sm"></span>
+                    </div>
+
+                    <div>
                         <label asp-for="SubjectModuleId" class="block text-sm font-medium text-gray-700"></label>
                         <select asp-for="SubjectModuleId" asp-items="@(new SelectList(Model.AvailableModules, "Id", "Name", Model.SubjectModuleId))" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             <option value="">Изберете модул</option>
@@ -280,13 +288,12 @@
             
             let isValid = true;
             
-            if (!input.value.trim()) {
-                input.classList.add('border-red-500');
-                isValid = false;
-            } else {
+            // Input is optional - only validate if provided
+            if (input.value.trim()) {
                 input.classList.add('border-green-500');
             }
             
+            // Expected output is required for test cases
             if (!output.value.trim()) {
                 output.classList.add('border-red-500');
                 isValid = false;

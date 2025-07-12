@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CodeGrade is an ASP.NET Core 9.0 MVC application for automated programming code evaluation in educational settings. It supports multi-language code execution (C#, Python, Java, JavaScript) using Docker containers for secure isolation.
+CodeGrade is an ASP.NET Core 9.0 MVC application for automated programming code evaluation in educational settings. It supports multi-language code execution (C#, Python, Java, JavaScript, C++, PHP, Ruby, Go, Rust, and more) using Judge0 API for secure execution without requiring Docker.
 
 ## Common Commands
 
@@ -36,13 +36,16 @@ dotnet ef database drop
 dotnet ef database update
 ```
 
-### Docker Code Runner
+### Judge0 API Setup
 ```bash
-# Build the code runner Docker image
-docker build -f Infrastructure/Docker/Dockerfile.CodeRunner -t codegrade/code-runner:latest .
-
-# Test Docker container manually
-docker run --rm -v "$(pwd)/test-code:/code" codegrade/code-runner:latest python /code/solution.py
+# No Docker needed! Just configure the API key in appsettings.json
+# 1. Register at RapidAPI.com
+# 2. Subscribe to Judge0 CE API (free tier: 1000 requests/day)
+# 3. Copy your API key
+# 4. Add to appsettings.json:
+#    "Judge0": {
+#      "ApiKey": "your-rapidapi-key-here"
+#    }
 ```
 
 ## Architecture Overview
@@ -50,13 +53,13 @@ docker run --rm -v "$(pwd)/test-code:/code" codegrade/code-runner:latest python 
 ### Core Components
 - **Controllers**: MVC controllers handling web requests (Account, Admin, Assignments, Grades, Home, Submissions)
 - **Models**: Domain entities using Entity Framework Core (User, Student, Teacher, Assignment, Submission, etc.)
-- **Services**: Business logic layer (DockerCodeExecutorService, GradeCalculationService)
+- **Services**: Business logic layer (Judge0CodeExecutorService, GradeCalculationService)
 - **ViewModels**: Data transfer objects for views
 - **Data**: ApplicationDbContext and database migrations
 
 ### Security Model
 - **Authentication**: ASP.NET Core Identity with role-based access (Admin, Teacher, Student)
-- **Code Execution**: Isolated Docker containers with resource limits and non-root execution
+- **Code Execution**: Secure execution via Judge0 API with resource limits and isolation
 - **Input Validation**: Comprehensive validation throughout controllers and models
 
 ### Database Schema
@@ -67,31 +70,32 @@ Key relationships:
 - Student → Submission → Assignment (N:1:N)
 - Submission → ExecutionResult (1:N)
 
-## Docker Code Execution System
+## Judge0 Code Execution System
 
-The application uses Docker containers for secure code execution with:
+The application uses Judge0 API for secure code execution with:
 - **Resource Limits**: Configurable time (30s default) and memory (128MB default) constraints
-- **Language Support**: C#, Python, Java, JavaScript with unified execution scripts
-- **Security**: Non-root user, read-only filesystem, network isolation
-- **Scripts Location**: `Infrastructure/Docker/scripts/run-{language}.sh`
+- **Language Support**: C#, Python, Java, JavaScript, C++, PHP, Ruby, Go, Rust, Swift, Kotlin, Scala, R, Dart
+- **Security**: Isolated execution environment provided by Judge0
+- **No Docker Required**: Works in shared hosting environments like SmarterASP.NET
 
 ## Key Configuration
 
 ### Database
 Default connection string uses SQL Server Express. Update in `appsettings.json` for different environments.
 
-### Docker Settings
+### Judge0 API Settings
 Configure in `appsettings.json`:
 ```json
 {
-  "Docker": {
-    "ImageName": "codegrade/code-runner:latest",
-    "NetworkName": "bridge"
+  "Judge0": {
+    "ApiKey": "your-rapidapi-key-here",
+    "ApiHost": "judge0-ce.p.rapidapi.com",
+    "BaseUrl": "https://judge0-ce.p.rapidapi.com"
   },
   "ExecutionLimits": {
-    "TimeoutSeconds": 30,
-    "MemoryLimitMB": 128,
-    "MaxSubmissionsPerMinute": 10
+    "DefaultTimeLimit": 30,
+    "DefaultMemoryLimit": 128,
+    "MaxSubmissionsPerHour": 10
   }
 }
 ```
@@ -100,13 +104,32 @@ Configure in `appsettings.json`:
 
 ### Code Execution Flow
 1. Student submits code via AssignmentsController
-2. DockerCodeExecutorService creates isolated container
+2. Judge0CodeExecutorService sends code to Judge0 API
 3. Code runs against test cases defined in Assignment
-4. Results stored as ExecutionResult entities
-5. GradeCalculationService computes final grade
+4. Results returned from Judge0 API
+5. Results stored as ExecutionResult entities
+6. GradeCalculationService computes final grade
+
+### Supported Languages and IDs
+- C#: 51 (.NET Core)
+- Python: 71 (3.8.1)
+- Java: 62 (OpenJDK 13.0.1)
+- JavaScript: 63 (Node.js 12.14.0)
+- C++: 54 (GCC 9.2.0)
+- C: 50 (GCC 9.2.0)
+- PHP: 68 (7.4.1)
+- Ruby: 72 (2.7.0)
+- Go: 60 (1.13.5)
+- Rust: 73 (1.40.0)
+- Swift: 83 (5.2.3)
+- Kotlin: 78 (1.3.70)
+- Scala: 81 (2.13.2)
+- R: 80 (4.0.0)
+- Dart: 87 (2.7.2)
 
 ### Current Limitations
-- Docker execution integration is marked as TODO in AssignmentsController:732
+- Requires internet connection for Judge0 API
+- Rate limited by Judge0 API (1000 requests/day free tier)
 - No comprehensive test suite exists
 - Email confirmation system not implemented
 
@@ -119,12 +142,38 @@ Configure in `appsettings.json`:
 
 The application includes SeedData.cs for initial data setup including:
 - Default admin user (admin@admin.com / Admin123!)
-- Sample class groups and subject modules
-- Test teacher and student accounts
 
-## Testing Strategy
+## Deployment
 
-Currently no automated tests exist. When implementing tests:
-- Use in-memory database for integration tests
-- Mock DockerCodeExecutorService for unit tests
-- Test Docker containers separately from web application logic
+### SmarterASP.NET (Shared Hosting)
+This application is optimized for shared hosting environments:
+- No Docker required
+- Minimal server requirements
+- Easy deployment process
+- Works with Judge0 API
+
+### Deployment Steps
+1. Get Judge0 API key from RapidAPI
+2. Upload files to SmarterASP.NET
+3. Configure database connection
+4. Add API key to appsettings.json
+5. Start the application
+
+## Cost Considerations
+
+- **Judge0 API**: Free up to 1000 requests/day
+- **Paid Plan**: $10/month for 100,000 requests
+- **Application**: Free (no Docker requirements)
+
+## Troubleshooting
+
+### Common Issues
+1. **API Key Issues**: Ensure Judge0 API key is correctly configured
+2. **Rate Limiting**: Monitor API usage to avoid hitting limits
+3. **Network Issues**: Check internet connectivity for API calls
+4. **Language Support**: Verify language ID is correct for Judge0 API
+
+### Debugging
+- Check application logs for API request/response details
+- Monitor Judge0 API dashboard for usage statistics
+- Test API connectivity with simple requests

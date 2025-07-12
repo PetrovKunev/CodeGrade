@@ -37,10 +37,12 @@ public class AssignmentsController : Controller
 
             var assignments = await _context.Assignments
                 .Include(a => a.SubjectModule)
+                .Include(a => a.ClassGroup)
                 .Where(a => a.TeacherId == teacher.Id)
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
+            ViewBag.Modules = await _context.SubjectModules.ToListAsync();
             return View("TeacherAssignments", assignments);
         }
         else if (User.IsInRole("Student"))
@@ -55,7 +57,8 @@ public class AssignmentsController : Controller
 
             var assignments = await _context.Assignments
                 .Include(a => a.SubjectModule)
-                .Where(a => a.IsActive && a.DueDate > DateTime.UtcNow)
+                .Include(a => a.ClassGroup)
+                .Where(a => a.IsActive && a.DueDate > DateTime.UtcNow && a.ClassGroupId == student.ClassGroupId)
                 .OrderBy(a => a.DueDate)
                 .ToListAsync();
 
@@ -72,6 +75,7 @@ public class AssignmentsController : Controller
             .Include(a => a.SubjectModule)
             .Include(a => a.Teacher)
             .Include(a => a.TestCases)
+            .Include(a => a.ClassGroup)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (assignment == null)
@@ -106,6 +110,12 @@ public class AssignmentsController : Controller
             if (student == null)
             {
                 return NotFound();
+            }
+            
+            // Only allow if assignment is for the student's class group
+            if (assignment.ClassGroupId != student.ClassGroupId)
+            {
+                return Forbid();
             }
             
             var publicTestCases = assignment.TestCases.Where(tc => !tc.IsHidden).ToList();
@@ -151,6 +161,7 @@ public class AssignmentsController : Controller
         var viewModel = new AssignmentViewModel
         {
             AvailableModules = await _context.SubjectModules.ToListAsync(),
+            AvailableClassGroups = await _context.ClassGroups.ToListAsync(),
             TestCases = new List<TestCaseViewModel>
             {
                 new TestCaseViewModel { Points = 1 }
@@ -174,8 +185,9 @@ public class AssignmentsController : Controller
             return NotFound();
         }
 
-        // Reload available modules for dropdown
+        // Reload available modules and class groups for dropdown
         model.AvailableModules = await _context.SubjectModules.ToListAsync();
+        model.AvailableClassGroups = await _context.ClassGroups.ToListAsync();
 
         if (ModelState.IsValid)
         {
@@ -191,14 +203,17 @@ public class AssignmentsController : Controller
                 TimeLimit = model.TimeLimit,
                 MemoryLimit = model.MemoryLimit,
                 IsActive = model.IsActive,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Language = model.Language,
+                ClassGroupId = model.ClassGroupId
             };
 
             _context.Assignments.Add(assignment);
             await _context.SaveChangesAsync();
 
-            // Add test cases
-            foreach (var testCaseModel in model.TestCases.Where(tc => !string.IsNullOrEmpty(tc.Input)))
+            // Add test cases - only add if both input and expected output are provided
+            foreach (var testCaseModel in model.TestCases.Where(tc => 
+                !string.IsNullOrEmpty(tc.Input) && !string.IsNullOrEmpty(tc.ExpectedOutput)))
             {
                 var testCase = new TestCase
                 {
@@ -254,6 +269,9 @@ public class AssignmentsController : Controller
             MemoryLimit = assignment.MemoryLimit,
             IsActive = assignment.IsActive,
             AvailableModules = await _context.SubjectModules.ToListAsync(),
+            AvailableClassGroups = await _context.ClassGroups.ToListAsync(),
+            Language = assignment.Language,
+            ClassGroupId = assignment.ClassGroupId,
             TestCases = assignment.TestCases.Select(tc => new TestCaseViewModel
             {
                 Id = tc.Id,
@@ -290,8 +308,9 @@ public class AssignmentsController : Controller
             return NotFound();
         }
 
-        // Reload available modules for dropdown
+        // Reload available modules and class groups for dropdown
         model.AvailableModules = await _context.SubjectModules.ToListAsync();
+        model.AvailableClassGroups = await _context.ClassGroups.ToListAsync();
 
         if (ModelState.IsValid)
         {
@@ -304,11 +323,14 @@ public class AssignmentsController : Controller
             assignment.TimeLimit = model.TimeLimit;
             assignment.MemoryLimit = model.MemoryLimit;
             assignment.IsActive = model.IsActive;
+            assignment.Language = model.Language;
+            assignment.ClassGroupId = model.ClassGroupId;
 
-            // Update test cases
+            // Update test cases - only add if both input and expected output are provided
             _context.TestCases.RemoveRange(assignment.TestCases);
             
-            foreach (var testCaseModel in model.TestCases.Where(tc => !string.IsNullOrEmpty(tc.Input)))
+            foreach (var testCaseModel in model.TestCases.Where(tc => 
+                !string.IsNullOrEmpty(tc.Input) && !string.IsNullOrEmpty(tc.ExpectedOutput)))
             {
                 var testCase = new TestCase
                 {
@@ -427,23 +449,47 @@ public class AssignmentsController : Controller
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
 
-            // Execute code against test cases
+            // Execute code against test cases - handle empty test cases
             try
             {
                 submission.Status = SubmissionStatus.Running;
                 await _context.SaveChangesAsync();
 
-                var executionResults = await _codeExecutor.ExecuteAllTestCasesAsync(
-                    submission.Code,
-                    submission.Language,
-                    assignment.TestCases.ToList(),
-                    assignment.TimeLimit,
-                    assignment.MemoryLimit
-                );
-
-                // Store execution results
-                foreach (var result in executionResults)
+                if (assignment.TestCases.Any())
                 {
+                    var executionResults = await _codeExecutor.ExecuteAllTestCasesAsync(
+                        submission.Code,
+                        submission.Language,
+                        assignment.TestCases.ToList(),
+                        assignment.TimeLimit,
+                        assignment.MemoryLimit
+                    );
+
+                    // Store execution results
+                    foreach (var result in executionResults)
+                    {
+                        _context.ExecutionResults.Add(result);
+                    }
+                }
+                else
+                {
+                    // No test cases - just compile and run the code to check for errors
+                    var dummyTestCase = new TestCase
+                    {
+                        Input = "",
+                        ExpectedOutput = "",
+                        Points = 0
+                    };
+                    
+                    var result = await _codeExecutor.ExecuteCodeAsync(
+                        submission.Code,
+                        submission.Language,
+                        dummyTestCase,
+                        assignment.TimeLimit,
+                        assignment.MemoryLimit
+                    );
+                    
+                    // Store the result for compilation/runtime error checking
                     _context.ExecutionResults.Add(result);
                 }
                 
@@ -495,11 +541,11 @@ public class AssignmentsController : Controller
                 return Json(new { success = false, error = "Assignment not found" });
             }
 
-            // Get public test cases only
+            // Get public test cases only - handle empty test cases
             var publicTestCases = assignment.TestCases.Where(tc => !tc.IsHidden).ToList();
             if (!publicTestCases.Any())
             {
-                return Json(new { success = false, error = "No public test cases available" });
+                return Json(new { success = false, error = "Няма налични тестови случаи за тази задача" });
             }
 
             var results = new List<object>();

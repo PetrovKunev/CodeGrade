@@ -66,10 +66,10 @@ namespace CodeGrade.Data
             {
                 var modules = new[]
                 {
-                    new SubjectModule { Name = "Въведение в програмирането", Description = "Основи на програмирането", Semester = 1 },
-                    new SubjectModule { Name = "Обектно-ориентирано програмиране", Description = "ООП принципи", Semester = 2 },
-                    new SubjectModule { Name = "Структури от данни", Description = "Масиви, списъци, стекове", Semester = 3 },
-                    new SubjectModule { Name = "Алгоритми", Description = "Сортиране, търсене, графи", Semester = 4 }
+                    new SubjectModule { Name = "Mодул 1 - Обектно ориентирано проектиране и програмиране", Description = "Обектно ориентирано проектиране и програмиране", Semester = 1 },
+                    new SubjectModule { Name = "Mодул 2 - Структури от данни и алгоритми", Description = "Структури от данни и алгоритми", Semester = 2 },
+                    new SubjectModule { Name = "Модул 3 - Релационен модел на бази от данни", Description = "Релационен модел на бази от данни", Semester = 3 },
+                    new SubjectModule { Name = "Модул 4 - Програмиране на информационни системи", Description = "Програмиране на информационни системи", Semester = 4 }
                 };
 
                 context.SubjectModules.AddRange(modules);

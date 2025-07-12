@@ -39,7 +39,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Add custom services
-builder.Services.AddScoped<ICodeExecutorService, DockerCodeExecutorService>();
+builder.Services.AddScoped<ICodeExecutorService, Judge0CodeExecutorService>();
 builder.Services.AddScoped<GradeCalculationService>();
 
 var app = builder.Build();

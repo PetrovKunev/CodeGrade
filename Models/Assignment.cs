@@ -22,6 +22,9 @@ namespace CodeGrade.Models
         public int TeacherId { get; set; }
         public Teacher Teacher { get; set; } = null!;
         
+        public int? ClassGroupId { get; set; }
+        public ClassGroup? ClassGroup { get; set; }
+        
         public DateTime DueDate { get; set; }
         
         [Range(1, 100)]
@@ -40,6 +43,8 @@ namespace CodeGrade.Models
         // Modern grading system
         public int? AssessmentCriteriaId { get; set; }
         public AssessmentCriteria? AssessmentCriteria { get; set; }
+        
+        public string Language { get; set; } = "csharp"; // Например: "csharp", "python", "java", ...
         
         // Navigation properties
         public ICollection<TestCase> TestCases { get; set; } = new List<TestCase>();

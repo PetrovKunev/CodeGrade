@@ -44,22 +44,41 @@ namespace CodeGrade.ViewModels
         [Display(Name = "Активна")]
         public bool IsActive { get; set; } = true;
         
+        [Required(ErrorMessage = "Езикът е задължителен")]
+        [Display(Name = "Език на задачата")]
+        public string Language { get; set; } = "csharp";
+
+        public List<(string Value, string Display)> AvailableLanguages { get; set; } = new List<(string, string)>
+        {
+            ("csharp", "C# (.NET Core)"),
+            ("python", "Python 3.8.1"),
+            ("java", "Java (OpenJDK 13)"),
+            ("javascript", "JavaScript (Node.js)"),
+            ("cpp", "C++ (GCC 9.2.0)"),
+            ("php", "PHP 7.4.1"),
+            ("ruby", "Ruby 2.7.0"),
+            ("go", "Go 1.13.5"),
+            ("rust", "Rust 1.40.0")
+        };
+        
         // For dropdown population
         public List<SubjectModule> AvailableModules { get; set; } = new List<SubjectModule>();
         
         // Test cases
         public List<TestCaseViewModel> TestCases { get; set; } = new List<TestCaseViewModel>();
+
+        [Display(Name = "Клас")]
+        public int? ClassGroupId { get; set; }
+        public List<ClassGroup> AvailableClassGroups { get; set; } = new List<ClassGroup>();
     }
     
     public class TestCaseViewModel
     {
         public int Id { get; set; }
         
-        [Required(ErrorMessage = "Входът е задължителен")]
         [Display(Name = "Вход")]
         public string Input { get; set; } = string.Empty;
         
-        [Required(ErrorMessage = "Очакваният изход е задължителен")]
         [Display(Name = "Очакван изход")]
         public string ExpectedOutput { get; set; } = string.Empty;
         

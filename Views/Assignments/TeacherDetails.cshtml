@@ -44,6 +44,14 @@
                             <span class="text-gray-600">@Model.MemoryLimit MB</span>
                         </div>
                         <div>
+                            <span class="font-medium text-gray-700">Клас:</span>
+                            <span class="text-gray-600">@(Model.ClassGroup?.Name ?? "-")</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Език:</span>
+                            <span class="text-gray-600">@GetLanguageDisplay(Model.Language)</span>
+                        </div>
+                        <div>
                             <span class="font-medium text-gray-700">Статус:</span>
                             @if (Model.IsActive)
                             {
@@ -231,4 +239,23 @@
             }
         }
     </script>
+}
+
+@functions {
+    private string GetLanguageDisplay(string code)
+    {
+        return code switch
+        {
+            "csharp" => "C# (.NET Core)",
+            "python" => "Python 3.8.1",
+            "java" => "Java (OpenJDK 13)",
+            "javascript" => "JavaScript (Node.js)",
+            "cpp" => "C++ (GCC 9.2.0)",
+            "php" => "PHP 7.4.1",
+            "ruby" => "Ruby 2.7.0",
+            "go" => "Go 1.13.5",
+            "rust" => "Rust 1.40.0",
+            _ => code
+        };
+    }
 }
