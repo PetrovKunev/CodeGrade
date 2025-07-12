@@ -6,11 +6,14 @@
 *.sln.docstates           # VS doc states
 appsettings*.json
 
-/bin/                     # Build outputs
-/obj/                     # Intermediate files
-/*.exe                    # Executables
-/*.dll                    # Assemblies (при self-contained публикуване)
-/publish/                 # Публикувано приложение (ако ползваш папка publish)
+# Build outputs and intermediate files
+bin/                      # Build outputs
+obj/                      # Intermediate files
+*.exe                     # Executables
+*.dll                     # Assemblies
+*.pdb                     # Debug symbols
+*.xml                     # XML documentation files
+publish/                  # Published application
 
 /**/*.[Rr]elease.*        # Release output
 /**/*.nupkg               # NuGet пакети
