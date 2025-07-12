@@ -14,12 +14,14 @@ public class AssignmentsController : Controller
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AssignmentsController> _logger;
     private readonly ICodeExecutorService _codeExecutor;
+    private readonly GradeCalculationService _gradeCalculationService;
 
-    public AssignmentsController(ApplicationDbContext context, ILogger<AssignmentsController> logger, ICodeExecutorService codeExecutor)
+    public AssignmentsController(ApplicationDbContext context, ILogger<AssignmentsController> logger, ICodeExecutorService codeExecutor, GradeCalculationService gradeCalculationService)
     {
         _context = context;
         _logger = logger;
         _codeExecutor = codeExecutor;
+        _gradeCalculationService = gradeCalculationService;
     }
 
     public async Task<IActionResult> Index()
@@ -444,25 +446,14 @@ public class AssignmentsController : Controller
                 {
                     _context.ExecutionResults.Add(result);
                 }
-
-                // Calculate final grade
-                var totalPoints = assignment.TestCases.Sum(tc => tc.Points);
-                var earnedPoints = executionResults.Where(r => r.IsSuccess).Sum(r => r.TestCase.Points);
-                var grade = new Grade
-                {
-                    SubmissionId = submission.Id,
-                    Points = earnedPoints,
-                    MaxPoints = totalPoints,
-                    Percentage = totalPoints > 0 ? (decimal)earnedPoints / totalPoints * 100 : 0,
-                    GradedAt = DateTime.UtcNow
-                };
-
-                _context.Grades.Add(grade);
-                submission.Status = SubmissionStatus.Completed;
                 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Решението е подадено и оценено успешно! Резултат: {earnedPoints}/{totalPoints} точки.";
+                // Use the grade calculation service for consistent grading
+                await _gradeCalculationService.UpdateSubmissionScoreAsync(submission.Id);
+                var grade = await _gradeCalculationService.CalculateGradeAsync(submission.Id);
+
+                TempData["SuccessMessage"] = $"Решението е подадено и оценено успешно! Резултат: {grade.Points} точки (Оценка: {grade.GradeValue}).";
             }
             catch (Exception ex)
             {

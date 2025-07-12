@@ -37,6 +37,10 @@ namespace CodeGrade.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
+        // Modern grading system
+        public int? AssessmentCriteriaId { get; set; }
+        public AssessmentCriteria? AssessmentCriteria { get; set; }
+        
         // Navigation properties
         public ICollection<TestCase> TestCases { get; set; } = new List<TestCase>();
         public ICollection<Submission> Submissions { get; set; } = new List<Submission>();

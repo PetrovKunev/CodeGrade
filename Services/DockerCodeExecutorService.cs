@@ -197,24 +197,30 @@ namespace CodeGrade.Services
             var output = new List<string>();
             var error = new List<string>();
             
-            using var reader = new StreamReader(logs);
-            string? line;
-            while ((line = await reader.ReadLineAsync()) != null)
+            // Docker logs contain binary stream data - need to parse properly
+            using var memoryStream = new MemoryStream();
+            await logs.CopyToAsync(memoryStream);
+            var logData = memoryStream.ToArray();
+            
+            // Parse Docker multiplexed stream format
+            var (stdout, stderr) = ParseDockerLogs(logData);
+            
+            if (!string.IsNullOrEmpty(stdout))
             {
-                if (line.StartsWith("STDOUT:"))
-                {
-                    output.Add(line.Substring(7));
-                }
-                else if (line.StartsWith("STDERR:"))
-                {
-                    error.Add(line.Substring(7));
-                }
+                output.AddRange(stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries));
+            }
+            
+            if (!string.IsNullOrEmpty(stderr))
+            {
+                error.AddRange(stderr.Split('\n', StringSplitOptions.RemoveEmptyEntries));
             }
 
             return new ContainerLogs
             {
                 Output = string.Join("\n", output),
-                Error = string.Join("\n", error)
+                Error = string.Join("\n", error),
+                CompilerOutput = string.Join("\n", error), // Compiler errors typically go to stderr
+                RuntimeOutput = string.Join("\n", output)   // Program output goes to stdout
             };
         }
 
@@ -319,13 +325,34 @@ namespace CodeGrade.Services
                     Stream = false
                 });
                 
-                // Read the first (and only) stats entry
-                var buffer = new byte[1024];
-                var bytesRead = await statsStream.ReadAsync(buffer, 0, buffer.Length);
-                var statsJson = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                // Read the stats JSON
+                using var reader = new StreamReader(statsStream);
+                var statsJson = await reader.ReadToEndAsync();
                 
-                // Parse memory usage from stats (simplified)
-                // In a real implementation, you'd parse the JSON properly
+                if (string.IsNullOrEmpty(statsJson))
+                {
+                    return new ContainerStats { MemoryUsed = 0 };
+                }
+                
+                try
+                {
+                    // Parse Docker stats JSON to extract memory usage
+                    using var jsonDoc = System.Text.Json.JsonDocument.Parse(statsJson);
+                    var root = jsonDoc.RootElement;
+                    
+                    if (root.TryGetProperty("memory_stats", out var memoryStats) &&
+                        memoryStats.TryGetProperty("usage", out var usage))
+                    {
+                        var memoryBytes = usage.GetInt64();
+                        var memoryKB = (int)(memoryBytes / 1024); // Convert to KB
+                        return new ContainerStats { MemoryUsed = memoryKB };
+                    }
+                }
+                catch
+                {
+                    // If JSON parsing fails, return 0
+                }
+                
                 return new ContainerStats { MemoryUsed = 0 };
             }
             catch
@@ -385,6 +412,50 @@ namespace CodeGrade.Services
             public int? MemoryUsed { get; set; }
         }
         
+        private (string stdout, string stderr) ParseDockerLogs(byte[] logData)
+        {
+            var stdout = new List<byte>();
+            var stderr = new List<byte>();
+            
+            int index = 0;
+            while (index < logData.Length)
+            {
+                if (index + 8 > logData.Length) break;
+                
+                // Docker multiplexed stream format:
+                // [stream_type][0][0][0][size1][size2][size3][size4][payload]
+                byte streamType = logData[index];
+                
+                // Get payload size (big-endian)
+                int payloadSize = (logData[index + 4] << 24) |
+                                (logData[index + 5] << 16) |
+                                (logData[index + 6] << 8) |
+                                logData[index + 7];
+                
+                index += 8; // Skip header
+                
+                if (index + payloadSize > logData.Length) break;
+                
+                var payload = new byte[payloadSize];
+                Array.Copy(logData, index, payload, 0, payloadSize);
+                
+                // Stream type: 1 = stdout, 2 = stderr
+                if (streamType == 1)
+                {
+                    stdout.AddRange(payload);
+                }
+                else if (streamType == 2)
+                {
+                    stderr.AddRange(payload);
+                }
+                
+                index += payloadSize;
+            }
+            
+            return (System.Text.Encoding.UTF8.GetString(stdout.ToArray()),
+                   System.Text.Encoding.UTF8.GetString(stderr.ToArray()));
+        }
+
         private class ContainerStats
         {
             public int? MemoryUsed { get; set; }
