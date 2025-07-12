@@ -12,7 +12,7 @@ namespace CodeGrade.Services
             _logger = logger;
         }
 
-        public async Task<QualityMetrics> AnalyzeCodeQualityAsync(string code, string language)
+        public Task<QualityMetrics> AnalyzeCodeQualityAsync(string code, string language)
         {
             var metrics = new QualityMetrics
             {
@@ -37,7 +37,7 @@ namespace CodeGrade.Services
             metrics.QualityFeedback = GenerateQualityFeedback(metrics);
             metrics.ImprovementSuggestions = GenerateImprovementSuggestions(metrics, code, language);
 
-            return metrics;
+            return Task.FromResult(metrics);
         }
 
         public int CalculateComplexity(string code)

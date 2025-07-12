@@ -84,13 +84,13 @@ namespace CodeGrade.Services
             return gradeResult;
         }
 
-        private async Task<int> CalculateCorrectnessScoreAsync(Submission submission)
+        private Task<int> CalculateCorrectnessScoreAsync(Submission submission)
         {
             var totalPoints = submission.Assignment.TestCases.Sum(tc => tc.Points);
-            if (totalPoints == 0) return 0;
+            if (totalPoints == 0) return Task.FromResult(0);
 
             var earnedPoints = submission.ExecutionResults.Sum(er => er.PointsEarned);
-            return (int)Math.Round((double)earnedPoints / totalPoints * 100);
+            return Task.FromResult((int)Math.Round((double)earnedPoints / totalPoints * 100));
         }
 
         private async Task<int> CalculateQualityScoreAsync(Submission submission)
@@ -117,11 +117,11 @@ namespace CodeGrade.Services
             return Math.Min(100, Math.Max(0, qualityScore));
         }
 
-        private async Task<int> CalculateTestingScoreAsync(Submission submission)
+        private Task<int> CalculateTestingScoreAsync(Submission submission)
         {
             // For now, based on execution results diversity and edge case coverage
             var totalTestCases = submission.Assignment.TestCases.Count;
-            if (totalTestCases == 0) return 100;
+            if (totalTestCases == 0) return Task.FromResult(100);
 
             var passedTestCases = submission.ExecutionResults.Count(er => er.IsCorrect);
             var edgeCasesPassed = submission.ExecutionResults
@@ -131,10 +131,10 @@ namespace CodeGrade.Services
             var basicScore = (int)Math.Round((double)passedTestCases / totalTestCases * 70);
             var edgeCaseBonus = Math.Min(30, edgeCasesPassed * 10);
 
-            return Math.Min(100, basicScore + edgeCaseBonus);
+            return Task.FromResult(Math.Min(100, basicScore + edgeCaseBonus));
         }
 
-        private async Task<int> CalculateApproachScoreAsync(Submission submission)
+        private Task<int> CalculateApproachScoreAsync(Submission submission)
         {
             // Basic approach scoring - can be enhanced with AI analysis
             var codeLength = submission.Code.Length;
@@ -145,7 +145,7 @@ namespace CodeGrade.Services
             var simplicityScore = complexity < 10 ? 30 : Math.Max(10, 30 - (complexity - 10) * 2);
             var innovationScore = 40; // Base score, can be enhanced with pattern recognition
 
-            return Math.Min(100, efficiencyScore + simplicityScore + innovationScore);
+            return Task.FromResult(Math.Min(100, efficiencyScore + simplicityScore + innovationScore));
         }
 
         private int CalculateWeightedScore(int correctness, int quality, int testing, int approach, AssessmentCriteria criteria)
@@ -187,7 +187,7 @@ namespace CodeGrade.Services
             return (attemptNumber, previousScore, isImprovement);
         }
 
-        private async Task<FeedbackResult> GenerateFeedbackAsync(Submission submission, int correctness, int quality, int testing, int approach)
+        private Task<FeedbackResult> GenerateFeedbackAsync(Submission submission, int correctness, int quality, int testing, int approach)
         {
             var feedback = new FeedbackResult();
 
@@ -239,7 +239,7 @@ namespace CodeGrade.Services
             else
                 feedback.OverallFeedback += "Keep practicing. Focus on correctness first, then quality.";
 
-            return feedback;
+            return Task.FromResult(feedback);
         }
 
         private async Task<AssessmentCriteria> GetDefaultCriteriaAsync()

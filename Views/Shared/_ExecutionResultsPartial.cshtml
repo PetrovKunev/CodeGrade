@@ -14,7 +14,7 @@
                     var passedTests = Model.Count(r => r.Status == CodeGrade.Models.ExecutionStatus.Passed);
                     var totalPoints = Model.Sum(r => r.PointsEarned);
                     var maxPoints = Model.Sum(r => r.TestCase?.Points ?? 0);
-                    var avgExecutionTime = Model.Where(r => r.ExecutionTime.HasValue).Average(r => r.ExecutionTime.Value);
+                    var avgExecutionTime = Model.Where(r => r.ExecutionTime.HasValue).Any() ? Model.Where(r => r.ExecutionTime.HasValue).Average(r => r.ExecutionTime!.Value) : 0;
                 }
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
