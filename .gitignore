@@ -7,6 +7,8 @@
 appsettings*.json
 
 # Build outputs and intermediate files
+**/bin/
+**/obj/
 bin/                      # Build outputs
 obj/                      # Intermediate files
 *.exe                     # Executables
