@@ -458,7 +458,7 @@ public class AssignmentsController : Controller
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error executing submission {SubmissionId}", submission.Id);
-                submission.Status = SubmissionStatus.Error;
+                submission.Status = SubmissionStatus.RuntimeError;
                 await _context.SaveChangesAsync();
                 
                 TempData["ErrorMessage"] = "Възникна грешка при изпълнението на кода. Моля, опитайте отново.";
@@ -518,8 +518,8 @@ public class AssignmentsController : Controller
                 {
                     input = testCase.Input,
                     expectedOutput = testCase.ExpectedOutput,
-                    actualOutput = result.Output,
-                    success = result.IsSuccess,
+                    actualOutput = result.ActualOutput,
+                    success = result.IsCorrect,
                     executionTime = result.ExecutionTime,
                     status = result.Status.ToString(),
                     errorMessage = result.ErrorMessage
@@ -535,10 +535,10 @@ public class AssignmentsController : Controller
         }
     }
 
-    // GET: Assignments/SubmissionStatus/5
+    // GET: Assignments/GetSubmissionStatus/5
     [HttpGet]
     [Authorize(Roles = "Student")]
-    public async Task<IActionResult> SubmissionStatus(int id)
+    public async Task<IActionResult> GetSubmissionStatus(int id)
     {
         try
         {
@@ -554,13 +554,15 @@ public class AssignmentsController : Controller
                 .Include(s => s.Assignment)
                 .Include(s => s.ExecutionResults)
                     .ThenInclude(er => er.TestCase)
-                .Include(s => s.Grade)
                 .FirstOrDefaultAsync(s => s.Id == id && s.StudentId == student.Id);
 
             if (submission == null)
             {
                 return Json(new { success = false, error = "Submission not found" });
             }
+
+            var grade = await _context.Grades
+                .FirstOrDefaultAsync(g => g.StudentId == student.Id && g.AssignmentId == submission.AssignmentId);
 
             var response = new
             {
@@ -575,19 +577,18 @@ public class AssignmentsController : Controller
                     testCaseId = er.TestCaseId,
                     input = er.TestCase.Input,
                     expectedOutput = er.TestCase.ExpectedOutput,
-                    actualOutput = er.Output,
-                    isSuccess = er.IsSuccess,
+                    actualOutput = er.ActualOutput,
+                    isSuccess = er.IsCorrect,
                     executionTime = er.ExecutionTime,
                     status = er.Status.ToString(),
                     errorMessage = er.ErrorMessage,
-                    points = er.IsSuccess ? er.TestCase.Points : 0
+                    points = er.IsCorrect ? er.TestCase.Points : 0
                 }).ToList(),
-                grade = submission.Grade != null ? new
+                grade = grade != null ? new
                 {
-                    points = submission.Grade.Points,
-                    maxPoints = submission.Grade.MaxPoints,
-                    percentage = submission.Grade.Percentage,
-                    gradedAt = submission.Grade.GradedAt.ToString("dd.MM.yyyy HH:mm")
+                    points = grade.Points,
+                    gradeValue = grade.GradeValue,
+                    gradedAt = grade.GradedAt.ToString("dd.MM.yyyy HH:mm")
                 } : null
             };
 

@@ -119,27 +119,26 @@ namespace CodeGrade.Services
         public async Task<Dictionary<string, double>> GetStudentStatisticsAsync(int studentId)
         {
             var grades = await GetStudentGradesAsync(studentId);
-            
-            if (!grades.Any())
-            {
-                return new Dictionary<string, double>();
-            }
 
             var totalAssignments = grades.Count;
-            var averageGrade = grades.Average(g => g.GradeValue ?? 0);
-            var averagePoints = grades.Average(g => g.Points);
-            var maxPoints = grades.Sum(g => g.Assignment.MaxPoints);
-            var totalPointsEarned = grades.Sum(g => g.Points);
+            var completedAssignments = grades.Count; // All grades represent completed assignments
+            var averageGrade = grades.Any() ? grades.Average(g => g.GradeValue ?? 0) : 0;
+            var averagePoints = grades.Any() ? grades.Average(g => g.Points) : 0;
+            var maxPoints = grades.Any() ? grades.Sum(g => g.Assignment.MaxPoints) : 0;
+            var totalPointsEarned = grades.Any() ? grades.Sum(g => g.Points) : 0;
             var overallPercentage = maxPoints > 0 ? (totalPointsEarned / (double)maxPoints) * 100 : 0;
+            var bestGrade = grades.Any() ? grades.Max(g => g.GradeValue ?? 0) : 0;
 
             return new Dictionary<string, double>
             {
                 ["TotalAssignments"] = totalAssignments,
+                ["CompletedAssignments"] = completedAssignments,
                 ["AverageGrade"] = averageGrade,
                 ["AveragePoints"] = averagePoints,
                 ["OverallPercentage"] = overallPercentage,
                 ["TotalPointsEarned"] = totalPointsEarned,
-                ["MaxPossiblePoints"] = maxPoints
+                ["MaxPossiblePoints"] = maxPoints,
+                ["BestGrade"] = bestGrade
             };
         }
     }

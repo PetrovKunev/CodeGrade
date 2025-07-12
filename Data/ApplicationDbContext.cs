@@ -20,6 +20,9 @@ namespace CodeGrade.Data
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<ExecutionResult> ExecutionResults { get; set; }
         public DbSet<Grade> Grades { get; set; }
+        public DbSet<GradeResult> GradeResults { get; set; }
+        public DbSet<QualityMetrics> QualityMetrics { get; set; }
+        public DbSet<AssessmentCriteria> AssessmentCriteria { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -113,6 +116,33 @@ namespace CodeGrade.Data
             builder.Entity<Grade>()
                 .HasIndex(g => new { g.StudentId, g.AssignmentId })
                 .IsUnique();
+
+            // Configure GradeResult relationships
+            builder.Entity<GradeResult>()
+                .HasOne(gr => gr.Submission)
+                .WithMany()
+                .HasForeignKey(gr => gr.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<GradeResult>()
+                .HasOne(gr => gr.AssessmentCriteria)
+                .WithMany(ac => ac.GradeResults)
+                .HasForeignKey(gr => gr.AssessmentCriteriaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure QualityMetrics relationships
+            builder.Entity<QualityMetrics>()
+                .HasOne(qm => qm.Submission)
+                .WithMany()
+                .HasForeignKey(qm => qm.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure AssessmentCriteria relationships
+            builder.Entity<AssessmentCriteria>()
+                .HasMany(ac => ac.Assignments)
+                .WithOne(a => a.AssessmentCriteria)
+                .HasForeignKey(a => a.AssessmentCriteriaId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 } 

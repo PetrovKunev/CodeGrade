@@ -58,6 +58,6 @@ public class SubmissionsController : Controller
             .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
 
-        return View("StudentSubmissions", submissions);
+        return View("MySubmissions", submissions);
     }
 } 

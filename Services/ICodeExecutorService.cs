@@ -9,13 +9,15 @@ namespace CodeGrade.Services
             string language, 
             TestCase testCase,
             int timeLimit,
-            int memoryLimit);
+            int memoryLimit,
+            Action<ExecutionStatus>? statusCallback = null);
             
         Task<List<ExecutionResult>> ExecuteAllTestCasesAsync(
             string code,
             string language,
             List<TestCase> testCases,
             int timeLimit,
-            int memoryLimit);
+            int memoryLimit,
+            Action<int, int, ExecutionStatus>? progressCallback = null);
     }
 } 

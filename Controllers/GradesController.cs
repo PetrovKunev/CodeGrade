@@ -65,6 +65,6 @@ public class GradesController : Controller
 
         ViewBag.Statistics = statistics;
 
-        return View("StudentGrades", grades);
+        return View("MyGrades", grades);
     }
 } 

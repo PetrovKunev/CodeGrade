@@ -323,7 +323,7 @@ namespace CodeGrade.Services
                 {
                     OneShot = true,
                     Stream = false
-                });
+                }, CancellationToken.None);
                 
                 // Read the stats JSON
                 using var reader = new StreamReader(statsStream);
