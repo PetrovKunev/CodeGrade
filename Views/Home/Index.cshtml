@@ -1,5 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Начало";
+    ViewData["Description"] = "CodeGrade - Модерна система за автоматично оценяване на програмен код. Подходяща за учители и ученици.";
+    ViewData["Keywords"] = "CodeGrade, автоматично оценяване, програмиране, образование, Judge0";
 }
 
 <div class="bg-white">
@@ -7,12 +9,12 @@
         <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
             <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
         </div>
-        <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div class="mx-auto max-w-2xl py-16 sm:py-32 lg:py-48">
             <div class="text-center">
-                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-6xl">
                     CodeGrade
                 </h1>
-                <p class="mt-6 text-lg leading-8 text-gray-600">
+                <p class="mt-6 text-base leading-7 text-gray-600 sm:text-lg sm:leading-8">
                     Модерна система за автоматично оценяване на програмен код. 
                     Подходяща за учители и ученици в сферата на програмирането.
                 </p>
@@ -45,10 +47,10 @@
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-2xl lg:text-center">
             <h2 class="text-base font-semibold leading-7 text-indigo-600">Функционалности</h2>
-            <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <p class="mt-2 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl lg:text-3xl lg:text-4xl">
                 Всичко, което ви трябва за оценяване на код
             </p>
-            <p class="mt-6 text-lg leading-8 text-gray-600">
+            <p class="mt-6 text-base leading-7 text-gray-600 sm:text-lg sm:leading-8">
                 CodeGrade предлага пълна функционалност за автоматично оценяване на програмен код с модерен интерфейс и мощни възможности.
             </p>
         </div>
@@ -79,6 +81,172 @@
                     </dt>
                     <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
                         <p class="flex-auto">Следете прогреса на учениците с подробни статистики и графики.</p>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="bg-white py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl lg:text-center">
+            <h2 class="text-base font-semibold leading-7 text-indigo-600">Статистики</h2>
+            <p class="mt-2 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                CodeGrade в цифри
+            </p>
+        </div>
+        <div class="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="flex flex-col items-center justify-center rounded-lg bg-gray-50 p-6 text-center">
+                <dt class="text-3xl font-bold leading-9 tracking-tight text-indigo-600">15+</dt>
+                <dd class="text-sm font-medium leading-6 text-gray-900">Поддържани езици</dd>
+            </div>
+            <div class="flex flex-col items-center justify-center rounded-lg bg-gray-50 p-6 text-center">
+                <dt class="text-3xl font-bold leading-9 tracking-tight text-indigo-600">1000+</dt>
+                <dd class="text-sm font-medium leading-6 text-gray-900">Тестови случая дневно</dd>
+            </div>
+            <div class="flex flex-col items-center justify-center rounded-lg bg-gray-50 p-6 text-center">
+                <dt class="text-3xl font-bold leading-9 tracking-tight text-indigo-600">30с</dt>
+                <dd class="text-sm font-medium leading-6 text-gray-900">Максимално време за изпълнение</dd>
+            </div>
+            <div class="flex flex-col items-center justify-center rounded-lg bg-gray-50 p-6 text-center">
+                <dt class="text-3xl font-bold leading-9 tracking-tight text-indigo-600">128MB</dt>
+                <dd class="text-sm font-medium leading-6 text-gray-900">Максимална памет</dd>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supported Languages Section -->
+<div class="bg-gray-50 py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl lg:text-center">
+            <h2 class="text-base font-semibold leading-7 text-indigo-600">Поддържани езици</h2>
+            <p class="mt-2 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                Програмирайте на любимия си език
+            </p>
+            <p class="mt-6 text-sm leading-6 text-gray-600 sm:text-base sm:leading-8">
+                CodeGrade поддържа широк спектър от популярни програмни езици чрез Judge0 API
+            </p>
+        </div>
+        <div class="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-microsoft text-2xl text-blue-600 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">C#</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-python text-2xl text-yellow-500 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">Python</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-java text-2xl text-red-600 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">Java</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-js-square text-2xl text-yellow-400 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">JavaScript</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fas fa-code text-2xl text-blue-500 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">C++</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-php text-2xl text-purple-600 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">PHP</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fas fa-gem text-2xl text-red-500 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">Ruby</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-golang text-2xl text-blue-400 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">Go</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fab fa-rust text-2xl text-orange-600 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">Rust</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-center rounded-lg bg-white p-4 shadow-sm">
+                <div class="text-center">
+                    <i class="fas fa-code text-2xl text-gray-700 mb-2" aria-hidden="true"></i>
+                    <p class="text-sm font-medium text-gray-900">C</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-600">И още: Swift, Kotlin, Scala, R, Dart</p>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Section -->
+<div class="bg-white py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl lg:text-center">
+            <h2 class="text-base font-semibold leading-7 text-indigo-600">Често задавани въпроси</h2>
+            <p class="mt-2 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                Отговори на най-честите въпроси
+            </p>
+        </div>
+        <div class="mx-auto mt-12 max-w-4xl">
+            <dl class="space-y-8">
+                <div>
+                    <dt class="text-base font-semibold leading-7 text-gray-900">
+                        Как работи автоматичното оценяване?
+                    </dt>
+                    <dd class="mt-2 text-base leading-7 text-gray-600">
+                        CodeGrade използва Judge0 API за сигурно изпълнение на кода. Вашият код се изпълнява срещу предварително дефинирани тестови случаи и получавате мигновени резултати с детайлна обратна връзка.
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-base font-semibold leading-7 text-gray-900">
+                        Безопасно ли е да изпълнявам код в системата?
+                    </dt>
+                    <dd class="mt-2 text-base leading-7 text-gray-600">
+                        Да, кодът се изпълнява в изолирана среда с ограничения по време (30 секунди) и памет (128MB). Judge0 API осигурява пълна изолация и сигурност.
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-base font-semibold leading-7 text-gray-900">
+                        Мога ли да използвам външни библиотеки?
+                    </dt>
+                    <dd class="mt-2 text-base leading-7 text-gray-600">
+                        Зависи от езика - повечето основни библиотеки са достъпни. За специфични случаи се консултирайте с вашия учител за допустимите библиотеки.
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-base font-semibold leading-7 text-gray-900">
+                        Колко опита мога да направя за една задача?
+                    </dt>
+                    <dd class="mt-2 text-base leading-7 text-gray-600">
+                        Можете да изпращате решения неограничен брой пъти до крайния срок. Системата ще запази най-добрия ви резултат.
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-base font-semibold leading-7 text-gray-900">
+                        Как мога да видя грешките в кода си?
+                    </dt>
+                    <dd class="mt-2 text-base leading-7 text-gray-600">
+                        Системата предоставя детайлни съобщения за грешки, включително компилационни грешки, runtime грешки и резултати от тестовете.
                     </dd>
                 </div>
             </dl>
