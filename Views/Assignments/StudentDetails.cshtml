@@ -133,6 +133,10 @@
                                     <option value="javascript">JavaScript</option>
                                 </select>
                                 <span asp-validation-for="SubmissionForm.Language" class="text-red-600 text-sm"></span>
+                                <!-- Debug info -->
+                                <div style="display: none;">
+                                    <p>Debug: Selected Language = @Model.SubmissionForm.Language</p>
+                                </div>
                             </div>
 
                             <div>
@@ -152,6 +156,12 @@
                                 <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
                                     <span id="char-count">0 символа</span>
                                     <span id="line-count">1 ред</span>
+                                </div>
+                                <!-- Debug info -->
+                                <div style="display: none;">
+                                    <p>Debug: Model Code = @Model.SubmissionForm.Code</p>
+                                    <p>Debug: Model Code Length = @(Model.SubmissionForm.Code?.Length ?? 0)</p>
+                                    <p>Debug: Model Language = @Model.SubmissionForm.Language</p>
                                 </div>
                             </div>
 
@@ -281,12 +291,34 @@
             const testResultsArea = document.getElementById('test-results-area');
             const testResultsContent = document.getElementById('test-results-content');
             
+            console.log('DOM loaded, elements found:');
+            console.log('codeEditor:', codeEditor);
+            console.log('charCount:', charCount);
+            console.log('lineCount:', lineCount);
+            console.log('submissionForm:', submissionForm);
+            
             // Code editor enhancements
             if (codeEditor) {
+                console.log('Code editor found, initial value:', codeEditor.value);
+                console.log('Code editor length:', codeEditor.value.length);
+                
                 // Update character and line count
                 function updateCounts() {
-                    if (charCount) charCount.textContent = codeEditor.value.length + ' символа';
-                    if (lineCount) lineCount.textContent = codeEditor.value.split('\\n').length + ' реда';
+                    const value = codeEditor.value;
+                    const chars = value.length;
+                    const lines = value.split('\\n').length;
+                    
+                    console.log('Updating counts - chars:', chars, 'lines:', lines);
+                    console.log('Editor value:', value);
+                    
+                    if (charCount) {
+                        charCount.textContent = chars + ' символа';
+                        console.log('Updated char count element:', charCount.textContent);
+                    }
+                    if (lineCount) {
+                        lineCount.textContent = lines + ' реда';
+                        console.log('Updated line count element:', lineCount.textContent);
+                    }
                 }
                 
                 codeEditor.addEventListener('input', updateCounts);
@@ -329,6 +361,58 @@
                     }
                 });
                 
+                // Auto-save functionality
+                let autoSaveTimeout;
+                codeEditor.addEventListener('input', function() {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        const formData = {
+                            assignmentId: @Model.Assignment.Id,
+                            code: this.value,
+                            language: document.getElementById('language-select').value
+                        };
+                        localStorage.setItem('draft-assignment-@Model.Assignment.Id', JSON.stringify(formData));
+                    }, 2000);
+                });
+                
+                // Load draft on page load
+                const draftKey = 'draft-assignment-@Model.Assignment.Id';
+                const savedDraft = localStorage.getItem(draftKey);
+                console.log('Checking for saved draft:', draftKey);
+                console.log('Saved draft found:', savedDraft);
+                
+                if (savedDraft) {
+                    try {
+                        const draft = JSON.parse(savedDraft);
+                        console.log('Parsed draft:', draft);
+                        console.log('Current editor value:', codeEditor.value);
+                        console.log('Draft code:', draft.code);
+                        
+                        if (draft.code && !codeEditor.value) {
+                            console.log('Loading draft code into editor');
+                            codeEditor.value = draft.code;
+                            if (draft.language) {
+                                document.getElementById('language-select').value = draft.language;
+                            }
+                            showNotification('Заредена е запазена чернова', 'info', 3000);
+                        } else {
+                            console.log('Not loading draft - conditions not met');
+                        }
+                    } catch (e) {
+                        console.error('Error loading draft:', e);
+                    }
+                } else {
+                    console.log('No saved draft found');
+                }
+                
+                // Initialize counts after loading draft
+                console.log('Initializing counts, editor value:', codeEditor.value);
+                console.log('Editor placeholder:', codeEditor.placeholder);
+                console.log('Editor rows:', codeEditor.rows);
+                console.log('Editor class:', codeEditor.className);
+                console.log('Editor innerHTML:', codeEditor.innerHTML);
+                console.log('Editor textContent:', codeEditor.textContent);
+                console.log('Editor defaultValue:', codeEditor.defaultValue);
                 updateCounts();
             }
             
@@ -405,24 +489,57 @@
             // Enhanced form submission
             if (submissionForm) {
                 submissionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
                     const code = codeEditor.value.trim();
                     if (!code) {
-                        e.preventDefault();
                         showNotification('Въведете код за подаване', 'error');
                         return;
                     }
                     
                     if (code.length > 50000) {
-                        e.preventDefault();
                         showNotification('Кодът е твърде дълъг (максимум 50,000 символа)', 'error');
                         return;
                     }
                     
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class=\"fas fa-spinner fa-spin mr-2\"></i>Подава се...';
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Подава се...';
                     submissionStatus.classList.remove('hidden');
                     
-                    // Allow form to submit normally
+                    // Create FormData and submit via AJAX
+                    const formData = new FormData(submissionForm);
+                    
+                    fetch(submissionForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(data.message, 'success');
+                            // Clear draft after successful submission
+                            localStorage.removeItem('draft-assignment-@Model.Assignment.Id');
+                            // Reload page to show updated submissions
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            showNotification(data.message, 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Подай решение';
+                            submissionStatus.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Submission error:', error);
+                        showNotification('Възникна грешка при подаването на решението. Моля, опитайте отново.', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Подай решение';
+                        submissionStatus.classList.add('hidden');
+                    });
                 });
             }
             
@@ -486,41 +603,6 @@
                 setTimeout(() => {
                     notification.remove();
                 }, duration);
-            }
-            
-            // Auto-save functionality
-            let autoSaveTimeout;
-            if (codeEditor) {
-                codeEditor.addEventListener('input', function() {
-                    clearTimeout(autoSaveTimeout);
-                    autoSaveTimeout = setTimeout(() => {
-                        const formData = {
-                            assignmentId: @Model.Assignment.Id,
-                            code: this.value,
-                            language: document.getElementById('language-select').value
-                        };
-                        localStorage.setItem('draft-assignment-@Model.Assignment.Id', JSON.stringify(formData));
-                    }, 2000);
-                });
-                
-                // Load draft on page load
-                const draftKey = 'draft-assignment-@Model.Assignment.Id';
-                const savedDraft = localStorage.getItem(draftKey);
-                if (savedDraft) {
-                    try {
-                        const draft = JSON.parse(savedDraft);
-                        if (draft.code && !codeEditor.value) {
-                            codeEditor.value = draft.code;
-                            if (draft.language) {
-                                document.getElementById('language-select').value = draft.language;
-                            }
-                            updateCounts();
-                            showNotification('Заредена е запазена чернова', 'info', 3000);
-                        }
-                    } catch (e) {
-                        console.error('Error loading draft:', e);
-                    }
-                }
             }
         });
     </script>

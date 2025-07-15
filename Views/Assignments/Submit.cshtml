@@ -70,7 +70,7 @@
                         </div>
                         <div>
                             <span class="font-medium text-gray-700">Публични тестове:</span>
-                            <span class="text-gray-600">@ViewBag.PublicTestCases.Count</span>
+                            <span class="text-gray-600">@(ViewBag.PublicTestCases?.Count ?? 0)</span>
                         </div>
                         <div>
                             <span class="font-medium text-gray-700">Клас:</span>
@@ -92,7 +92,7 @@
                 </div>
 
                 <!-- Public Test Cases -->
-                @if (ViewBag.PublicTestCases.Any())
+                @if (ViewBag.PublicTestCases != null && ViewBag.PublicTestCases.Count > 0)
                 {
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Примерни тестови случаи</h3>
@@ -132,7 +132,12 @@
                 {
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Подай решение</h3>
-                        <form asp-action="Submit" method="post" class="space-y-4" id="submission-form">
+                        <form asp-action="Submit" asp-route-id="@Model.AssignmentId" method="post" class="space-y-4" id="submission-form">
+                            <!-- Debug info -->
+                            <div style="display: none;">
+                                <p>Debug: AssignmentId = @Model.AssignmentId</p>
+                                <p>Debug: Form action will be: /Assignments/Submit/@Model.AssignmentId</p>
+                            </div>
                             <input asp-for="AssignmentId" type="hidden" />
                             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
 
@@ -213,7 +218,7 @@
                 <!-- My Submissions -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h3 class="text-lg font-medium text-gray-900 mb-3">Моите решения</h3>
-                    @if (ViewBag.StudentSubmissions.Any())
+                    @if (ViewBag.StudentSubmissions != null && ViewBag.StudentSubmissions.Count > 0)
                     {
                         <div class="space-y-3">
                             @foreach (var submission in ViewBag.StudentSubmissions.Take(5))
@@ -400,12 +405,16 @@
                 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const actionUrl = form.attr('action');
+                
+                console.log('Form action URL:', actionUrl);
+                console.log('Assignment ID:', @Model.AssignmentId);
                 
                 submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Подава се...');
                 submissionStatus.show();
                 
                 $.ajax({
-                    url: form.attr('action'),
+                    url: actionUrl,
                     type: 'POST',
                     data: formData,
                     processData: false,
@@ -427,6 +436,8 @@
                     },
                     error: function(xhr, status, error) {
                         console.error('Submission error:', error);
+                        console.error('Status:', xhr.status);
+                        console.error('Response:', xhr.responseText);
                         alert('Възникна грешка при подаването на решението. Моля, опитайте отново.');
                         submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>Подай решение');
                         submissionStatus.hide();

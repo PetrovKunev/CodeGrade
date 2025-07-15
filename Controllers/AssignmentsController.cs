@@ -132,7 +132,8 @@ public class AssignmentsController : Controller
                 SubmissionForm = new SubmissionViewModel
                 {
                     AssignmentId = assignment.Id,
-                    Assignment = assignment
+                    Assignment = assignment,
+                    Language = assignment.Language ?? "csharp"
                 },
                 CanSubmit = assignment.DueDate > DateTime.UtcNow,
                 TimeRemaining = assignment.DueDate > DateTime.UtcNow 
@@ -588,7 +589,13 @@ public class AssignmentsController : Controller
             return RedirectToAction("Submit", new { id = model.AssignmentId });
         }
 
-        TempData["ErrorMessage"] = "Грешка при подаването на решението.";
+        // ModelState is invalid
+        var errorMessages = ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+        
+        TempData["ErrorMessage"] = "Грешка при подаването на решението: " + string.Join(", ", errorMessages);
         
         // Check if this is an AJAX request
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
