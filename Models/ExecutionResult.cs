@@ -9,8 +9,8 @@ namespace CodeGrade.Models
         public int SubmissionId { get; set; }
         public Submission Submission { get; set; } = null!;
         
-        public int TestCaseId { get; set; }
-        public TestCase TestCase { get; set; } = null!;
+        public int? TestCaseId { get; set; }
+        public TestCase? TestCase { get; set; }
         
         public string Input { get; set; } = string.Empty;
         public string ExpectedOutput { get; set; } = string.Empty;

@@ -125,7 +125,7 @@ namespace CodeGrade.Services
 
             var passedTestCases = submission.ExecutionResults.Count(er => er.IsCorrect);
             var edgeCasesPassed = submission.ExecutionResults
-                .Where(er => er.IsCorrect && er.TestCase.IsHidden)
+                .Where(er => er.IsCorrect && er.TestCase?.IsHidden == true)
                 .Count();
 
             var basicScore = (int)Math.Round((double)passedTestCases / totalTestCases * 70);

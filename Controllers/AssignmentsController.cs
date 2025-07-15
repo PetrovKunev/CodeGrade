@@ -586,6 +586,7 @@ public class AssignmentsController : Controller
                     
                     // Store the result for compilation/runtime error checking
                     result.SubmissionId = submission.Id;
+                    result.TestCaseId = null; // No test case for assignments without test cases
                     _context.ExecutionResults.Add(result);
                 }
                 
