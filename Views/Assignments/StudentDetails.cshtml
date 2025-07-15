@@ -7,18 +7,24 @@
     <div class="px-4 py-5 sm:p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900">@Model.Assignment.Title</h2>
-                <p class="text-sm text-indigo-700 font-semibold mt-1">
-                    @GetLanguageDisplay(Model.Assignment.Language)
-                </p>
-                <p class="text-gray-600 mt-1">@Model.Assignment.SubjectModule?.Name</p>
+                @if (Model.Assignment != null)
+                {
+                    <h2 class="text-2xl font-bold text-gray-900">@Model.Assignment.Title</h2>
+                    <p class="text-sm text-indigo-700 font-semibold mt-1">
+                        @GetLanguageDisplay(Model.Assignment.Language)
+                    </p>
+                    <p class="text-gray-600 mt-1">@Model.Assignment.SubjectModule?.Name</p>
+                }
             </div>
             <div class="flex items-center space-x-4">
                 <div class="text-right">
                     <div class="text-sm text-gray-600">Краен срок:</div>
-                    <div class="font-medium @(Model.Assignment.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
-                        @Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm")
-                    </div>
+                    @if (Model.Assignment != null)
+                    {
+                        <div class="font-medium @(Model.Assignment.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
+                            @Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    }
                     <div class="text-xs text-gray-500">@Model.TimeRemaining</div>
                 </div>
                 <a href="/Assignments" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
@@ -34,35 +40,38 @@
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h3 class="text-lg font-medium text-gray-900 mb-3">Информация за задачата</h3>
                     <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="font-medium text-gray-700">Максимални точки:</span>
-                            <span class="text-gray-600">@Model.Assignment.MaxPoints</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-700">Времеви лимит:</span>
-                            <span class="text-gray-600">@Model.Assignment.TimeLimit сек</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-700">Лимит на паметта:</span>
-                            <span class="text-gray-600">@Model.Assignment.MemoryLimit MB</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-700">Публични тестове:</span>
-                            <span class="text-gray-600">@Model.PublicTestCases.Count</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-700">Клас:</span>
-                            <span class="text-gray-600">@(Model.Assignment.ClassGroup?.Name ?? "-")</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-700">Език:</span>
-                            <span class="text-gray-600">@GetLanguageDisplay(Model.Assignment.Language)</span>
-                        </div>
+                        @if (Model.Assignment != null)
+                        {
+                            <div>
+                                <span class="font-medium text-gray-700">Максимални точки:</span>
+                                <span class="text-gray-600">@Model.Assignment.MaxPoints</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Времеви лимит:</span>
+                                <span class="text-gray-600">@Model.Assignment.TimeLimit сек</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Лимит на паметта:</span>
+                                <span class="text-gray-600">@Model.Assignment.MemoryLimit MB</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Публични тестове:</span>
+                                <span class="text-gray-600">@Model.PublicTestCases.Count</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Клас:</span>
+                                <span class="text-gray-600">@(Model.Assignment.ClassGroup?.Name ?? "-")</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-700">Език:</span>
+                                <span class="text-gray-600">@GetLanguageDisplay(Model.Assignment.Language)</span>
+                            </div>
+                        }
                     </div>
                 </div>
 
                 <!-- Description -->
-                @if (!string.IsNullOrEmpty(Model.Assignment.Description))
+                @if (Model.Assignment != null && !string.IsNullOrEmpty(Model.Assignment.Description))
                 {
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Описание</h3>
@@ -71,12 +80,15 @@
                 }
 
                 <!-- Problem Statement -->
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900 mb-3">Условие на задачата</h3>
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <pre class="whitespace-pre-wrap text-gray-700">@Model.Assignment.ProblemStatement</pre>
+                @if (Model.Assignment != null)
+                {
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Условие на задачата</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <pre class="whitespace-pre-wrap text-gray-700">@Model.Assignment.ProblemStatement</pre>
+                        </div>
                     </div>
-                </div>
+                }
 
                 <!-- Public Test Cases -->
                 @if (Model.PublicTestCases.Any())
@@ -116,11 +128,16 @@
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-lg font-medium text-gray-900">Подай решение</h3>
-                            <a asp-action="Submit" asp-route-id="@Model.Assignment.Id" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
-                                <i class="fas fa-external-link-alt mr-2"></i>Отвори в нов прозорец
-                            </a>
+                            @if (Model.Assignment != null)
+                            {
+                                <a asp-action="Submit" asp-route-id="@Model.Assignment.Id" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                                    <i class="fas fa-external-link-alt mr-2"></i>Отвори в нов прозорец
+                                </a>
+                            }
                         </div>
-                        <form asp-action="Submit" asp-route-id="@Model.Assignment.Id" method="post" class="space-y-4" id="submission-form">
+                        @if (Model.Assignment != null)
+                        {
+                            <form asp-action="Submit" asp-route-id="@Model.Assignment.Id" method="post" class="space-y-4" id="submission-form">
                             <input asp-for="SubmissionForm.AssignmentId" type="hidden" />
                             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
 
@@ -186,13 +203,17 @@
                             <div class="flex justify-between items-center">
                                 <div class="text-sm text-gray-500">
                                     <i class="fas fa-info-circle mr-1"></i>
-                                    Максимално време: @Model.Assignment.TimeLimit сек | Памет: @Model.Assignment.MemoryLimit MB
+                                    @if (Model.Assignment != null)
+                                    {
+                                        <span>Максимално време: @Model.Assignment.TimeLimit сек | Памет: @Model.Assignment.MemoryLimit MB</span>
+                                    }
                                 </div>
                                 <button type="submit" id="submit-btn" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fas fa-paper-plane mr-2"></i>Подай решение
                                 </button>
                             </div>
                         </form>
+                        }
                     </div>
                 }
                 else
@@ -223,9 +244,12 @@
                         @if (Model.StudentSubmissions.Count > 3)
                         {
                             <div class="mt-4 pt-3 border-t border-gray-200 text-center">
-                                <a href="/Submissions/MySubmissions?assignmentId=@Model.Assignment.Id" class="text-sm text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-list mr-1"></i>Виж всички решения (@Model.StudentSubmissions.Count)
-                                </a>
+                                @if (Model.Assignment != null)
+                                {
+                                    <a href="/Submissions/MySubmissions?assignmentId=@Model.Assignment.Id" class="text-sm text-indigo-600 hover:text-indigo-800">
+                                        <i class="fas fa-list mr-1"></i>Виж всички решения (@Model.StudentSubmissions.Count)
+                                    </a>
+                                }
                             </div>
                         }
                     }
@@ -251,10 +275,13 @@
                             <span class="text-sm text-gray-600">Публични тестове:</span>
                             <span class="text-sm font-medium text-gray-900">@Model.PublicTestCases.Count</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">Общо точки:</span>
-                            <span class="text-sm font-medium text-gray-900">@Model.Assignment.MaxPoints</span>
-                        </div>
+                        @if (Model.Assignment != null)
+                        {
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-600">Общо точки:</span>
+                                <span class="text-sm font-medium text-gray-900">@Model.Assignment.MaxPoints</span>
+                            </div>
+                        }
                     </div>
                 </div>
 

@@ -6,7 +6,7 @@ namespace CodeGrade.ViewModels
     public class SubmissionViewModel
     {
         public int AssignmentId { get; set; }
-        public Assignment Assignment { get; set; } = null!;
+        public Assignment? Assignment { get; set; }
         
         [Required(ErrorMessage = "Кодът е задължителен")]
         [Display(Name = "Код")]
@@ -27,7 +27,7 @@ namespace CodeGrade.ViewModels
     
     public class AssignmentDetailsViewModel
     {
-        public Assignment Assignment { get; set; } = null!;
+        public Assignment? Assignment { get; set; }
         public List<TestCase> PublicTestCases { get; set; } = new List<TestCase>();
         public List<Submission> StudentSubmissions { get; set; } = new List<Submission>();
         public SubmissionViewModel SubmissionForm { get; set; } = new SubmissionViewModel();
