@@ -1,0 +1,482 @@
+@model CodeGrade.ViewModels.SubmissionViewModel
+@{
+    ViewData["Title"] = "Подай решение";
+}
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Подай решение</h2>
+                <p class="text-lg text-gray-600 mt-1">@Model.Assignment.Title</p>
+                <p class="text-sm text-indigo-700 font-semibold mt-1">
+                    @GetLanguageDisplay(Model.Assignment.Language)
+                </p>
+                <p class="text-gray-600 mt-1">@Model.Assignment.SubjectModule?.Name</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <div class="text-sm text-gray-600">Краен срок:</div>
+                    <div class="font-medium @(Model.Assignment.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
+                        @Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm")
+                    </div>
+                    <div class="text-xs text-gray-500">@ViewBag.TimeRemaining</div>
+                </div>
+                <a href="/Assignments/Details/@Model.AssignmentId" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Назад
+                </a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    <span class="text-green-800">@TempData["SuccessMessage"]</span>
+                </div>
+            </div>
+        }
+        
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                    <span class="text-red-800">@TempData["ErrorMessage"]</span>
+                </div>
+            </div>
+        }
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Assignment Info -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Информация за задачата</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-700">Максимални точки:</span>
+                            <span class="text-gray-600">@Model.Assignment.MaxPoints</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Времеви лимит:</span>
+                            <span class="text-gray-600">@Model.Assignment.TimeLimit сек</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Лимит на паметта:</span>
+                            <span class="text-gray-600">@Model.Assignment.MemoryLimit MB</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Публични тестове:</span>
+                            <span class="text-gray-600">@ViewBag.PublicTestCases.Count</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Клас:</span>
+                            <span class="text-gray-600">@(Model.Assignment.ClassGroup?.Name ?? "-")</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Език:</span>
+                            <span class="text-gray-600">@GetLanguageDisplay(Model.Assignment.Language)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Problem Statement -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Условие на задачата</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <pre class="whitespace-pre-wrap text-gray-700">@Model.Assignment.ProblemStatement</pre>
+                    </div>
+                </div>
+
+                <!-- Public Test Cases -->
+                @if (ViewBag.PublicTestCases.Any())
+                {
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Примерни тестови случаи</h3>
+                        <div class="space-y-4">
+                            @{
+                                var orderedTestCases = (List<CodeGrade.Models.TestCase>)ViewBag.PublicTestCases;
+                            }
+                            @for (int i = 0; i < orderedTestCases.Count; i++)
+                            {
+                                var testCase = orderedTestCases[i];
+                                <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="font-medium text-gray-900">
+                                            Тест @(i + 1)
+                                            <span class="text-sm text-gray-500">(@testCase.Points точки)</span>
+                                        </h4>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Вход:</label>
+                                            <pre class="bg-gray-100 rounded p-2 text-sm text-gray-700 overflow-x-auto">@testCase.Input</pre>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Очакван изход:</label>
+                                            <pre class="bg-gray-100 rounded p-2 text-sm text-gray-700 overflow-x-auto">@testCase.ExpectedOutput</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Submission Form -->
+                @if (ViewBag.CanSubmit)
+                {
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Подай решение</h3>
+                        <form asp-action="Submit" method="post" class="space-y-4" id="submission-form">
+                            <input asp-for="AssignmentId" type="hidden" />
+                            <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
+
+                            <div>
+                                <label asp-for="Language" class="block text-sm font-medium text-gray-700">Език на програмиране</label>
+                                <select asp-for="Language" id="language-select" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="csharp">C#</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="javascript">JavaScript</option>
+                                </select>
+                                <span asp-validation-for="Language" class="text-red-600 text-sm"></span>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label asp-for="Code" class="block text-sm font-medium text-gray-700">Код на решението</label>
+                                    <div class="flex space-x-2 text-xs">
+                                        <button type="button" id="test-code-btn" class="text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-play mr-1"></i>Тествай с примерите
+                                        </button>
+                                        <button type="button" id="format-code-btn" class="text-gray-600 hover:text-gray-800">
+                                            <i class="fas fa-indent mr-1"></i>Форматирай
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea asp-for="Code" id="code-editor" rows="15" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono" placeholder="Въведете вашия код тук..." spellcheck="false"></textarea>
+                                <span asp-validation-for="Code" class="text-red-600 text-sm"></span>
+                                <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
+                                    <span id="char-count">0 символа</span>
+                                    <span id="line-count">1 ред</span>
+                                </div>
+                            </div>
+
+                            <!-- Test Results Area -->
+                            <div id="test-results-area" class="hidden">
+                                <h4 class="text-sm font-medium text-gray-900 mb-2">Резултати от тестване:</h4>
+                                <div id="test-results-content" class="bg-gray-50 border rounded p-3">
+                                    <!-- Test results will be populated here -->
+                                </div>
+                            </div>
+
+                            <!-- Submission Status -->
+                            <div id="submission-status" class="hidden">
+                                <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                    <div class="flex items-center">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                                        <span class="text-blue-800">Обработва се решението...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Максимално време: @Model.Assignment.TimeLimit сек | Памет: @Model.Assignment.MemoryLimit MB
+                                </div>
+                                <button type="submit" id="submit-btn" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-paper-plane mr-2"></i>Подай решение
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                            <span class="text-red-800">Срокът за подаване на решения е изтекъл.</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- My Submissions -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Моите решения</h3>
+                    @if (ViewBag.StudentSubmissions.Any())
+                    {
+                        <div class="space-y-3">
+                            @foreach (var submission in ViewBag.StudentSubmissions.Take(5))
+                            {
+                                <div class="bg-white rounded p-3 border">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            @submission.SubmittedAt.ToString("dd.MM.yyyy HH:mm")
+                                        </div>
+                                        <div class="text-xs px-2 py-1 rounded @GetStatusColor(submission.Status)">
+                                            @GetStatusDisplay(submission.Status)
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-gray-600">
+                                        @GetLanguageDisplay(submission.Language)
+                                    </div>
+                                    @if (submission.Grade != null)
+                                    {
+                                        <div class="text-xs text-gray-600 mt-1">
+                                            @submission.Grade.Points точки (Оценка: @submission.Grade.GradeValue)
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        @if (ViewBag.StudentSubmissions.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <a href="/Submissions/MySubmissions" class="text-sm text-indigo-600 hover:text-indigo-800">
+                                    Виж всички решения
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-gray-500 text-sm">Все още нямате подадени решения за тази задача.</p>
+                    }
+                </div>
+
+                <!-- Tips -->
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Съвети</h3>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-2 mt-0.5"></i>
+                            <span>Винаги тествайте кода си с примерните тестове преди да го подадете</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-clock text-blue-500 mr-2 mt-0.5"></i>
+                            <span>Следвайте времевия лимит за изпълнение</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-memory text-green-500 mr-2 mt-0.5"></i>
+                            <span>Внимавайте за лимита на паметта</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                            <span>Проверете дали изходът съвпада точно с очаквания</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const codeEditor = $('#code-editor');
+            const charCount = $('#char-count');
+            const lineCount = $('#line-count');
+            const testCodeBtn = $('#test-code-btn');
+            const formatCodeBtn = $('#format-code-btn');
+            const testResultsArea = $('#test-results-area');
+            const testResultsContent = $('#test-results-content');
+            const submitBtn = $('#submit-btn');
+            const submissionStatus = $('#submission-status');
+
+            // Update character and line count
+            function updateCounts() {
+                const text = codeEditor.val();
+                const chars = text.length;
+                const lines = text.split('\n').length;
+                charCount.text(chars + ' символа');
+                lineCount.text(lines + ' ред' + (lines !== 1 ? 'а' : ''));
+            }
+
+            codeEditor.on('input', updateCounts);
+            updateCounts();
+
+            // Test code functionality
+            testCodeBtn.on('click', function() {
+                const code = codeEditor.val().trim();
+                const language = $('#language-select').val();
+
+                if (!code) {
+                    alert('Моля, въведете код за тестване.');
+                    return;
+                }
+
+                testCodeBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Тества се...');
+                testResultsArea.show();
+                testResultsContent.html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Тества се...</div>');
+
+                $.ajax({
+                    url: '/Assignments/TestCode',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        assignmentId: @Model.AssignmentId,
+                        code: code,
+                        language: language
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            let resultsHtml = '';
+                            response.results.forEach(function(result, index) {
+                                const statusClass = result.success ? 'text-green-600' : 'text-red-600';
+                                const statusIcon = result.success ? 'fa-check' : 'fa-times';
+                                
+                                resultsHtml += `
+                                    <div class="border-b border-gray-200 pb-3 mb-3 ${index === response.results.length - 1 ? 'border-b-0 pb-0 mb-0' : ''}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium">Тест ${index + 1}</span>
+                                            <span class="${statusClass}">
+                                                <i class="fas ${statusIcon} mr-1"></i>
+                                                ${result.success ? 'Успешно' : 'Грешка'}
+                                            </span>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                                            <div>
+                                                <span class="font-medium">Вход:</span>
+                                                <pre class="bg-gray-100 p-1 rounded mt-1">${result.input || '(празно)'}</pre>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium">Очакван изход:</span>
+                                                <pre class="bg-gray-100 p-1 rounded mt-1">${result.expectedOutput || '(празно)'}</pre>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium">Ваш изход:</span>
+                                                <pre class="bg-gray-100 p-1 rounded mt-1">${result.actualOutput || '(празно)'}</pre>
+                                            </div>
+                                        </div>
+                                        ${result.errorMessage ? `<div class="text-red-600 text-xs mt-1">Грешка: ${result.errorMessage}</div>` : ''}
+                                        <div class="text-gray-500 text-xs mt-1">
+                                            Време: ${result.executionTime}ms | Статус: ${result.status}
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            testResultsContent.html(resultsHtml);
+                        } else {
+                            testResultsContent.html(`<div class="text-red-600">${response.error}</div>`);
+                        }
+                    },
+                    error: function() {
+                        testResultsContent.html('<div class="text-red-600">Възникна грешка при тестването на кода.</div>');
+                    },
+                    complete: function() {
+                        testCodeBtn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i>Тествай с примерите');
+                    }
+                });
+            });
+
+            // Format code functionality
+            formatCodeBtn.on('click', function() {
+                const code = codeEditor.val();
+                if (code.trim()) {
+                    // Simple formatting - you can enhance this
+                    const formatted = code
+                        .replace(/\t/g, '    ') // Replace tabs with spaces
+                        .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove extra blank lines
+                        .trim();
+                    codeEditor.val(formatted);
+                    updateCounts();
+                }
+            });
+
+            // Form submission
+            $('#submission-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Подава се...');
+                submissionStatus.show();
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message and reload page
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            // Show error message
+                            alert(response.message);
+                            submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>Подай решение');
+                            submissionStatus.hide();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Submission error:', error);
+                        alert('Възникна грешка при подаването на решението. Моля, опитайте отново.');
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>Подай решение');
+                        submissionStatus.hide();
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@functions {
+    public string GetLanguageDisplay(string language)
+    {
+        return language switch
+        {
+            "csharp" => "C#",
+            "python" => "Python",
+            "java" => "Java",
+            "javascript" => "JavaScript",
+            _ => language
+        };
+    }
+
+    public string GetStatusDisplay(SubmissionStatus status)
+    {
+        return status switch
+        {
+            SubmissionStatus.Pending => "Чака",
+            SubmissionStatus.Running => "Изпълнява се",
+            SubmissionStatus.Completed => "Завършено",
+            SubmissionStatus.CompilationError => "Грешка при компилация",
+            SubmissionStatus.RuntimeError => "Грешка при изпълнение",
+            SubmissionStatus.TimeLimitExceeded => "Превишен времеви лимит",
+            SubmissionStatus.MemoryLimitExceeded => "Превишен лимит на паметта",
+            _ => status.ToString()
+        };
+    }
+
+    public string GetStatusColor(SubmissionStatus status)
+    {
+        return status switch
+        {
+            SubmissionStatus.Pending => "bg-yellow-100 text-yellow-800",
+            SubmissionStatus.Running => "bg-blue-100 text-blue-800",
+            SubmissionStatus.Completed => "bg-green-100 text-green-800",
+            SubmissionStatus.CompilationError => "bg-red-100 text-red-800",
+            SubmissionStatus.RuntimeError => "bg-red-100 text-red-800",
+            SubmissionStatus.TimeLimitExceeded => "bg-orange-100 text-orange-800",
+            SubmissionStatus.MemoryLimitExceeded => "bg-orange-100 text-orange-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+} 

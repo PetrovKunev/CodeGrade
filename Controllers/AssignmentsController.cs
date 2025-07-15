@@ -405,6 +405,69 @@ public class AssignmentsController : Controller
     }
 
     // POST: Assignments/Submit
+    // GET: Assignments/Submit/5
+    [HttpGet]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> Submit(int id)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var student = await _context.Students
+            .Include(s => s.ClassGroup)
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound();
+        }
+
+        var assignment = await _context.Assignments
+            .Include(a => a.SubjectModule)
+            .Include(a => a.TestCases)
+            .Include(a => a.ClassGroup)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (assignment == null)
+        {
+            return NotFound();
+        }
+
+        // Check if assignment is active and not past due date
+        if (!assignment.IsActive || assignment.DueDate <= DateTime.UtcNow)
+        {
+            TempData["ErrorMessage"] = "Задачата е неактивна или крайният срок е изтекъл.";
+            return RedirectToAction("Details", new { id = id });
+        }
+
+        // Check if student can access this assignment
+        if (assignment.ClassGroupId != student.ClassGroupId)
+        {
+            return Forbid();
+        }
+
+        var publicTestCases = assignment.TestCases.Where(tc => !tc.IsHidden).ToList();
+        var studentSubmissions = await _context.Submissions
+            .Where(s => s.StudentId == student.Id && s.AssignmentId == assignment.Id)
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+
+        var viewModel = new SubmissionViewModel
+        {
+            AssignmentId = assignment.Id,
+            Assignment = assignment,
+            AvailableLanguages = new List<string> { "csharp", "python", "java", "javascript" },
+            Language = assignment.Language ?? "csharp"
+        };
+
+        ViewBag.PublicTestCases = publicTestCases;
+        ViewBag.StudentSubmissions = studentSubmissions;
+        ViewBag.CanSubmit = assignment.DueDate > DateTime.UtcNow;
+        ViewBag.TimeRemaining = assignment.DueDate > DateTime.UtcNow 
+            ? $"{(assignment.DueDate - DateTime.UtcNow).Days} дни" 
+            : "Изтекъл";
+
+        return View(viewModel);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Student")]
@@ -431,7 +494,7 @@ public class AssignmentsController : Controller
         if (!assignment.IsActive || assignment.DueDate <= DateTime.UtcNow)
         {
             TempData["ErrorMessage"] = "Задачата е неактивна или крайният срок е изтекъл.";
-            return RedirectToAction("Details", new { id = model.AssignmentId });
+            return RedirectToAction("Submit", new { id = model.AssignmentId });
         }
 
         if (ModelState.IsValid)
@@ -500,6 +563,12 @@ public class AssignmentsController : Controller
                 var grade = await _gradeCalculationService.CalculateGradeAsync(submission.Id);
 
                 TempData["SuccessMessage"] = $"Решението е подадено и оценено успешно! Резултат: {grade.Points} точки (Оценка: {grade.GradeValue}).";
+                
+                // Check if this is an AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = true, message = TempData["SuccessMessage"] });
+                }
             }
             catch (Exception ex)
             {
@@ -508,13 +577,26 @@ public class AssignmentsController : Controller
                 await _context.SaveChangesAsync();
                 
                 TempData["ErrorMessage"] = "Възникна грешка при изпълнението на кода. Моля, опитайте отново.";
+                
+                // Check if this is an AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = TempData["ErrorMessage"] });
+                }
             }
             
-            return RedirectToAction("Details", new { id = model.AssignmentId });
+            return RedirectToAction("Submit", new { id = model.AssignmentId });
         }
 
         TempData["ErrorMessage"] = "Грешка при подаването на решението.";
-        return RedirectToAction("Details", new { id = model.AssignmentId });
+        
+        // Check if this is an AJAX request
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new { success = false, message = TempData["ErrorMessage"] });
+        }
+        
+        return RedirectToAction("Submit", new { id = model.AssignmentId });
     }
 
     // POST: Assignments/TestCode

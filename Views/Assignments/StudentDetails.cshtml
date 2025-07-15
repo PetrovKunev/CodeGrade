@@ -114,8 +114,13 @@
                 @if (Model.CanSubmit)
                 {
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-3">Подай решение</h3>
-                        <form asp-action="Submit" method="post" class="space-y-4" id="submission-form">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-medium text-gray-900">Подай решение</h3>
+                            <a asp-action="Submit" asp-route-id="@Model.Assignment.Id" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>Отвори в нов прозорец
+                            </a>
+                        </div>
+                        <form asp-action="Submit" asp-route-id="@Model.Assignment.Id" method="post" class="space-y-4" id="submission-form">
                             <input asp-for="SubmissionForm.AssignmentId" type="hidden" />
                             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
 
@@ -367,11 +372,12 @@
                     this.innerHTML = '<i class=\"fas fa-spinner fa-spin mr-1\"></i>Тества...';
                     
                     try {
+                        const token = document.querySelector('input[name=\"__RequestVerificationToken\"]')?.value;
                         const response = await fetch('/Assignments/TestCode', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': document.querySelector('input[name=\"__RequestVerificationToken\"]').value
+                                ...(token && { 'RequestVerificationToken': token })
                             },
                             body: JSON.stringify({
                                 code: code,
@@ -381,7 +387,11 @@
                         });
                         
                         const result = await response.json();
-                        displayTestResults(result);
+                        if (result.success) {
+                            displayTestResults(result.results);
+                        } else {
+                            showNotification(result.error || 'Грешка при тестването', 'error');
+                        }
                         
                     } catch (error) {
                         showNotification('Грешка при тестването: ' + error.message, 'error');
@@ -395,15 +405,15 @@
             // Enhanced form submission
             if (submissionForm) {
                 submissionForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
                     const code = codeEditor.value.trim();
                     if (!code) {
+                        e.preventDefault();
                         showNotification('Въведете код за подаване', 'error');
                         return;
                     }
                     
                     if (code.length > 50000) {
+                        e.preventDefault();
                         showNotification('Кодът е твърде дълъг (максимум 50,000 символа)', 'error');
                         return;
                     }
@@ -412,8 +422,7 @@
                     submitBtn.innerHTML = '<i class=\"fas fa-spinner fa-spin mr-2\"></i>Подава се...';
                     submissionStatus.classList.remove('hidden');
                     
-                    // Submit the form
-                    this.submit();
+                    // Allow form to submit normally
                 });
             }
             
@@ -428,26 +437,28 @@
                 let html = '<div class=\"space-y-2\">';
                 
                 results.forEach((result, index) => {
-                    const statusClass = result.isCorrect ? 'text-green-600' : 'text-red-600';
-                    const statusIcon = result.isCorrect ? 'fas fa-check-circle' : 'fas fa-times-circle';
+                    const statusClass = result.success ? 'text-green-600' : 'text-red-600';
+                    const statusIcon = result.success ? 'fas fa-check-circle' : 'fas fa-times-circle';
                     
                     html += `
-                        <div class=\"border rounded p-2 \${result.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}\">
+                        <div class=\"border rounded p-2 \${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}\">
                             <div class=\"flex items-center justify-between mb-1\">
                                 <span class=\"text-sm font-medium\">
                                     <i class=\"\${statusIcon} \${statusClass} mr-1\"></i>
                                     Тест \${index + 1}
                                 </span>
-                                <span class=\"text-xs \${statusClass}\">\${result.pointsEarned}/\${result.testCase?.points || 0} точки</span>
+                                <span class=\"text-xs \${statusClass}\">\${result.success ? '✓' : '✗'}</span>
                             </div>
                     `;
                     
-                    if (!result.isCorrect) {
+                    if (!result.success) {
                         html += `
                             <div class=\"text-xs space-y-1\">
                                 <div><strong>Вход:</strong> \${result.input || 'Няма'}</div>
                                 <div><strong>Очакван:</strong> \${result.expectedOutput || 'Няма'}</div>
                                 <div><strong>Получен:</strong> \${result.actualOutput || 'Няма'}</div>
+                                <div><strong>Статус:</strong> \${result.status || 'Неизвестен'}</div>
+                                \${result.errorMessage ? `<div><strong>Грешка:</strong> \${result.errorMessage}</div>` : ''}
                             </div>
                         `;
                     }
