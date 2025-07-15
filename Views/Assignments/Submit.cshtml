@@ -144,7 +144,7 @@
                 {
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Подай решение</h3>
-                        <form asp-action="Submit" method="post" class="space-y-4" id="submission-form">
+                        <form asp-action="Submit" asp-route-id="@Model.AssignmentId" method="post" class="space-y-4" id="submission-form">
                             <!-- Debug info -->
                             <div style="display: none;">
                                 <p>Debug: AssignmentId = @Model.AssignmentId</p>
@@ -434,6 +434,11 @@
                 const formData = new FormData(form[0]);
                 const actionUrl = form.attr('action');
                 const token = $('input[name="__RequestVerificationToken"]').val();
+                
+                // Ensure AssignmentId is set properly
+                if (!formData.get('AssignmentId')) {
+                    formData.set('AssignmentId', @Model.AssignmentId);
+                }
                 
                 console.log('Form action URL:', actionUrl);
                 console.log('Assignment ID:', @Model.AssignmentId);

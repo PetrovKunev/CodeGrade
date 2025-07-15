@@ -472,19 +472,28 @@ public class AssignmentsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Student")]
-    public async Task<IActionResult> Submit(SubmissionViewModel model)
+    public async Task<IActionResult> Submit(int id, SubmissionViewModel model)
     {
+        _logger.LogInformation("Submission attempt - Route ID: {RouteId}, Model AssignmentId: {ModelId}", id, model.AssignmentId);
+        
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == userId);
 
         if (student == null)
         {
+            _logger.LogError("Student not found for user ID: {UserId}", userId);
             return NotFound();
         }
 
+        // Use the route parameter if model.AssignmentId is 0 or null
+        var assignmentId = model.AssignmentId > 0 ? model.AssignmentId : id;
+        model.AssignmentId = assignmentId;
+        
+        _logger.LogInformation("Final assignment ID: {AssignmentId}", assignmentId);
+        
         var assignment = await _context.Assignments
             .Include(a => a.TestCases)
-            .FirstOrDefaultAsync(a => a.Id == model.AssignmentId);
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
 
         if (assignment == null)
         {
@@ -495,11 +504,20 @@ public class AssignmentsController : Controller
         if (!assignment.IsActive || assignment.DueDate <= DateTime.UtcNow)
         {
             TempData["ErrorMessage"] = "Задачата е неактивна или крайният срок е изтекъл.";
-            return RedirectToAction("Submit", new { id = model.AssignmentId });
+            
+            // Check if this is an AJAX request
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = TempData["ErrorMessage"] });
+            }
+            
+            return RedirectToAction("Submit", new { id = assignmentId });
         }
 
         if (ModelState.IsValid)
         {
+            _logger.LogInformation("Creating submission for student {StudentId}, assignment {AssignmentId}", student.Id, assignment.Id);
+            
             var submission = new Submission
             {
                 StudentId = student.Id,
@@ -512,15 +530,22 @@ public class AssignmentsController : Controller
 
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Submission created with ID: {SubmissionId}", submission.Id);
 
             // Execute code against test cases - handle empty test cases
             try
             {
+                _logger.LogInformation("Starting code execution for submission {SubmissionId}", submission.Id);
+                
                 submission.Status = SubmissionStatus.Running;
                 await _context.SaveChangesAsync();
 
                 if (assignment.TestCases.Any())
                 {
+                    _logger.LogInformation("Executing {TestCaseCount} test cases for submission {SubmissionId}", 
+                        assignment.TestCases.Count, submission.Id);
+                    
                     var executionResults = await _codeExecutor.ExecuteAllTestCasesAsync(
                         submission.Code,
                         submission.Language,
@@ -532,11 +557,17 @@ public class AssignmentsController : Controller
                     // Store execution results
                     foreach (var result in executionResults)
                     {
+                        result.SubmissionId = submission.Id;
                         _context.ExecutionResults.Add(result);
                     }
+                    
+                    _logger.LogInformation("Execution completed for submission {SubmissionId}. Results: {ResultCount}", 
+                        submission.Id, executionResults.Count);
                 }
                 else
                 {
+                    _logger.LogInformation("No test cases found for assignment {AssignmentId}. Running compilation check only.", assignment.Id);
+                    
                     // No test cases - just compile and run the code to check for errors
                     var dummyTestCase = new TestCase
                     {
@@ -554,14 +585,23 @@ public class AssignmentsController : Controller
                     );
                     
                     // Store the result for compilation/runtime error checking
+                    result.SubmissionId = submission.Id;
                     _context.ExecutionResults.Add(result);
                 }
                 
                 await _context.SaveChangesAsync();
 
                 // Use the grade calculation service for consistent grading
+                _logger.LogInformation("Calculating grade for submission {SubmissionId}", submission.Id);
+                
                 await _gradeCalculationService.UpdateSubmissionScoreAsync(submission.Id);
                 var grade = await _gradeCalculationService.CalculateGradeAsync(submission.Id);
+
+                _logger.LogInformation("Grade calculated for submission {SubmissionId}: {Points} points (Grade: {GradeValue})", 
+                    submission.Id, grade.Points, grade.GradeValue);
+                
+                submission.Status = SubmissionStatus.Completed;
+                await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = $"Решението е подадено и оценено успешно! Резултат: {grade.Points} точки (Оценка: {grade.GradeValue}).";
                 
@@ -586,7 +626,7 @@ public class AssignmentsController : Controller
                 }
             }
             
-            return RedirectToAction("Submit", new { id = model.AssignmentId });
+            return RedirectToAction("Submit", new { id = assignmentId });
         }
 
         // ModelState is invalid
@@ -603,7 +643,7 @@ public class AssignmentsController : Controller
             return Json(new { success = false, message = TempData["ErrorMessage"] });
         }
         
-        return RedirectToAction("Submit", new { id = model.AssignmentId });
+        return RedirectToAction("Submit", new { id = assignmentId });
     }
 
     // POST: Assignments/TestCode

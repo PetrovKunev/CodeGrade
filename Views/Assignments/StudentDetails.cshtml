@@ -536,6 +536,11 @@
                     // Create FormData and submit via AJAX
                     const formData = new FormData(submissionForm);
                     
+                    // Ensure AssignmentId is properly set
+                    if (!formData.get('SubmissionForm.AssignmentId')) {
+                        formData.set('SubmissionForm.AssignmentId', @Model.Assignment.Id);
+                    }
+                    
                     fetch(submissionForm.action, {
                         method: 'POST',
                         body: formData,
