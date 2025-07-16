@@ -451,6 +451,14 @@ public class AssignmentsController : Controller
             .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
 
+        // Get grades for these submissions
+        var grades = await _context.Grades
+            .Where(g => g.StudentId == student.Id && g.AssignmentId == assignment.Id)
+            .ToListAsync();
+
+        // Create a dictionary to map assignment IDs to grades
+        var gradeLookup = grades.ToDictionary(g => g.AssignmentId, g => g);
+
         var viewModel = new SubmissionViewModel
         {
             AssignmentId = assignment.Id,
@@ -461,6 +469,7 @@ public class AssignmentsController : Controller
 
         ViewBag.PublicTestCases = publicTestCases;
         ViewBag.StudentSubmissions = studentSubmissions;
+        ViewBag.GradeLookup = gradeLookup;
         ViewBag.CanSubmit = assignment.DueDate > DateTime.UtcNow;
         ViewBag.TimeRemaining = assignment.DueDate > DateTime.UtcNow 
             ? $"{(assignment.DueDate - DateTime.UtcNow).Days} дни" 

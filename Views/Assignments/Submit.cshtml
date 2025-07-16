@@ -237,7 +237,11 @@
                     @if (ViewBag.StudentSubmissions != null && ViewBag.StudentSubmissions.Count > 0)
                     {
                         <div class="space-y-3">
-                            @foreach (var submission in ViewBag.StudentSubmissions.Take(5))
+                            @{
+                                var studentSubmissions = (List<CodeGrade.Models.Submission>)ViewBag.StudentSubmissions;
+                                var gradeLookup = (Dictionary<int, CodeGrade.Models.Grade>)ViewBag.GradeLookup;
+                            }
+                            @foreach (var submission in studentSubmissions.Take(5))
                             {
                                 <div class="bg-white rounded p-3 border">
                                     <div class="flex justify-between items-start mb-2">
@@ -251,16 +255,17 @@
                                     <div class="text-xs text-gray-600">
                                         @GetLanguageDisplay(submission.Language)
                                     </div>
-                                    @if (submission.Grade != null)
+                                    @if (gradeLookup.ContainsKey(submission.AssignmentId))
                                     {
+                                        var grade = gradeLookup[submission.AssignmentId];
                                         <div class="text-xs text-gray-600 mt-1">
-                                            @submission.Grade.Points точки (Оценка: @submission.Grade.GradeValue)
+                                            @grade.Points точки (Оценка: @grade.GradeValue)
                                         </div>
                                     }
                                 </div>
                             }
                         </div>
-                        @if (ViewBag.StudentSubmissions.Count > 5)
+                        @if (studentSubmissions.Count > 5)
                         {
                             <div class="text-center mt-3">
                                 <a href="/Submissions/MySubmissions" class="text-sm text-indigo-600 hover:text-indigo-800">
