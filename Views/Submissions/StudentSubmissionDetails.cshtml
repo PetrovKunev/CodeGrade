@@ -1,0 +1,213 @@
+@model CodeGrade.Models.Submission
+@{
+    ViewData["Title"] = "Details on solution";
+}
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Details on solution</h2>
+                <p class="text-lg text-gray-600 mt-1">@Model.Assignment?.Title ?? "No assignment"</p>
+                <p class="text-sm text-gray-500 mt-1">@Model.Assignment?.SubjectModule?.Name ?? "-"</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <div class="text-sm text-gray-600">Submitted on:</div>
+                    <div class="font-medium">@Model.SubmittedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                </div>
+                <a href="/Submissions/MySubmissions" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Submission Info -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Information</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Status:</span>
+                        <span class="text-sm font-medium">
+                            @switch (Model.Status)
+                            {
+                                case SubmissionStatus.Completed:
+                                    <span class="text-green-600">Successful</span>
+                                    break;
+                                case SubmissionStatus.CompilationError:
+                                    <span class="text-red-600">Compilation Error</span>
+                                    break;
+                                case SubmissionStatus.RuntimeError:
+                                    <span class="text-red-600">Runtime Error</span>
+                                    break;
+                                case SubmissionStatus.TimeLimitExceeded:
+                                    <span class="text-orange-600">Time Limit Exceeded</span>
+                                    break;
+                                case SubmissionStatus.MemoryLimitExceeded:
+                                    <span class="text-orange-600">Memory Limit Exceeded</span>
+                                    break;
+                                default:
+                                    <span class="text-yellow-600">In Progress</span>
+                                    break;
+                            }
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Language:</span>
+                        <span class="text-sm font-medium">@GetLanguageDisplay(Model.Language ?? "")</span>
+                    </div>
+                    @if (Model.ExecutionTime.HasValue)
+                    {
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Execution Time:</span>
+                            <span class="text-sm font-medium">@Model.ExecutionTime ?? 0 ms</span>
+                        </div>
+                    }
+                    @if (Model.MemoryUsed.HasValue)
+                    {
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Memory Used:</span>
+                            <span class="text-sm font-medium">@Model.MemoryUsed ?? 0 KB</span>
+                        </div>
+                    }
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Score:</span>
+                        <span class="text-sm font-medium text-green-600">@Model.Score/100</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Assignment</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Due Date:</span>
+                        <span class="text-sm font-medium @(Model.Assignment?.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
+                            @(Model.Assignment?.DueDate != null ? Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm") : "-")
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Max Points:</span>
+                        <span class="text-sm font-medium">@Model.Assignment?.MaxPoints ?? 0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Time Limit:</span>
+                        <span class="text-sm font-medium">@Model.Assignment?.TimeLimit ?? 0 ms</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Memory Limit:</span>
+                        <span class="text-sm font-medium">@Model.Assignment?.MemoryLimit ?? 0 KB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Section -->
+        <div class="mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Code</h3>
+            <div class="bg-gray-900 rounded-lg p-4">
+                <pre class="text-sm text-gray-100 overflow-x-auto"><code>@(Model.Code ?? "No code submitted")</code></pre>
+            </div>
+        </div>
+
+        <!-- Error Messages -->
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Error</h3>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <pre class="text-sm text-red-800 whitespace-pre-wrap">@Model.ErrorMessage</pre>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.CompilerOutput))
+        {
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Compiler Output</h3>
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <pre class="text-sm text-yellow-800 whitespace-pre-wrap">@Model.CompilerOutput</pre>
+                </div>
+            </div>
+        }
+
+        <!-- Test Results -->
+        @if (Model.ExecutionResults != null && Model.ExecutionResults.Any())
+        {
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Test Results</h3>
+                <div class="space-y-3">
+                    @foreach (var result in Model.ExecutionResults.OrderBy(r => r.TestCaseId))
+                    {
+                        <div class="border rounded-lg p-4 @(result.IsCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200")">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-medium @(result.IsCorrect ? "text-green-800" : "text-red-800")">
+                                    Test @result.TestCaseId
+                                </h4>
+                                <span class="text-sm @(result.IsCorrect ? "text-green-600" : "text-red-600")">
+                                    @if (result.IsCorrect)
+                                    {
+                                        <i class="fas fa-check mr-1"></i><span>Success</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times mr-1"></i><span>Error</span>
+                                    }
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="font-medium text-gray-700">Input:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.TestCase?.Input ?? "-"</pre>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-700">Expected Output:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.TestCase?.ExpectedOutput ?? "-"</pre>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <span class="font-medium text-gray-700">Actual Output:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@(result.ActualOutput ?? "No output")</pre>
+                                </div>
+                                @if (!string.IsNullOrEmpty(result.ErrorMessage))
+                                {
+                                    <div class="md:col-span-2">
+                                        <span class="font-medium text-red-700">Error:</span>
+                                        <pre class="mt-1 bg-red-100 p-2 rounded text-xs text-red-800">@result.ErrorMessage</pre>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Actions -->
+        <div class="flex justify-center space-x-4">
+            <a href="/Assignments/Details/@Model.AssignmentId" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-tasks mr-2"></i>To Assignment
+            </a>
+            @if (Model.Assignment?.DueDate > DateTime.UtcNow)
+            {
+                <a href="/Assignments/Submit/@Model.AssignmentId" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>New Solution
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetLanguageDisplay(string language)
+    {
+        return language switch
+        {
+            "csharp" => "C#",
+            "python" => "Python",
+            "java" => "Java",
+            "javascript" => "JavaScript",
+            _ => language
+        };
+    }
+} 

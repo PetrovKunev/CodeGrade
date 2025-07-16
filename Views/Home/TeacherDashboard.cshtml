@@ -92,7 +92,7 @@
                             <div class="flex justify-between items-start">
                                 <div>
                                     <h4 class="text-lg font-medium text-gray-900">@assignment.Title</h4>
-                                    <p class="text-sm text-gray-600">@assignment.SubjectModule.Name</p>
+                                    <p class="text-sm text-gray-600">@assignment.SubjectModule?.Name</p>
                                     <p class="text-sm text-gray-500 mt-1">
                                         <i class="fas fa-calendar mr-1"></i>
                                         Създадена: @assignment.CreatedAt.ToString("dd.MM.yyyy")
@@ -159,12 +159,12 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
-                                            @submission.Student.User.FirstName @submission.Student.User.LastName
+                                            @submission.Student?.User?.FirstName @submission.Student?.User?.LastName
                                         </div>
-                                        <div class="text-sm text-gray-500">@submission.Student.StudentNumber</div>
+                                        <div class="text-sm text-gray-500">@submission.Student?.StudentNumber</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">@submission.Assignment.Title</div>
+                                        <div class="text-sm font-medium text-gray-900">@submission.Assignment?.Title</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">@submission.SubmittedAt.ToString("dd.MM.yyyy HH:mm")</div>
@@ -185,7 +185,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">@submission.Score/@submission.Assignment.MaxPoints</div>
+                                        <div class="text-sm text-gray-900">@submission.Score/@submission.Assignment?.MaxPoints</div>
                                     </td>
                                 </tr>
                             }

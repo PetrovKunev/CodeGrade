@@ -28,7 +28,25 @@
                         {
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    @submission.Student?.User?.UserName
+                                    @if (submission.Student?.User != null)
+                                    {
+                                        <span>@submission.Student.User.FirstName @submission.Student.User.LastName</span>
+                                        <br />
+                                        <span class="text-xs text-gray-500">
+                                            @if (submission.Student.ClassGroup != null)
+                                            {
+                                                <span>@submission.Student.ClassGroup.Name - №@submission.Student.ClassNumber</span>
+                                            }
+                                            else
+                                            {
+                                                <span>№@submission.Student.ClassNumber</span>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">Няма данни</span>
+                                    }
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     @submission.Assignment?.Title
