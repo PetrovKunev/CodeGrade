@@ -29,7 +29,25 @@
                             var percentage = (double)grade.Points / 100 * 100;
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    @grade.Student?.User?.UserName
+                                    @if (grade.Student?.User != null)
+                                    {
+                                        <span>@grade.Student.User.FirstName @grade.Student.User.LastName</span>
+                                        <br />
+                                        <span class="text-xs text-gray-500">
+                                            @if (grade.Student.ClassGroup != null)
+                                            {
+                                                <span>@grade.Student.ClassGroup.Name - №@grade.Student.ClassNumber</span>
+                                            }
+                                            else
+                                            {
+                                                <span>№@grade.Student.ClassNumber</span>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400">Няма данни</span>
+                                    }
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     @grade.Assignment?.Title

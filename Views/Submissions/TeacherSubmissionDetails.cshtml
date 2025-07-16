@@ -1,36 +1,25 @@
-@model CodeGrade.Models.Submission
+@model CodeGrade.ViewModels.SubmissionDetailsViewModel
 @{
-    ViewData["Title"] = "Details on solution";
+    ViewData["Title"] = "Детайли на решението";
 }
 
 <div class="bg-white shadow rounded-lg">
     <div class="px-4 py-5 sm:p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900">Details on solution</h2>
-                <p class="text-lg text-gray-600 mt-1">@Model.Assignment?.Title ?? "No assignment"</p>
-                @if (Model.Student?.User != null)
-                {
-                    <p class="text-sm text-gray-500 mt-1">
-                        Student: @Model.Student.User.FirstName @Model.Student.User.LastName (@Model.Student.StudentNumber)
-                    </p>
-                }
-                else if (Model.Student != null)
-                {
-                    <p class="text-sm text-gray-500 mt-1">Student: @Model.Student.StudentNumber</p>
-                }
-                else
-                {
-                    <p class="text-sm text-gray-500 mt-1">Student: Unknown</p>
-                }
+                <h2 class="text-2xl font-bold text-gray-900">Детайли на решението</h2>
+                <p class="text-lg text-gray-600 mt-1">@Model.AssignmentTitle</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Ученик: @Model.StudentName (@Model.ClassGroupName - №@Model.ClassNumber)
+                </p>
             </div>
             <div class="flex items-center space-x-4">
                 <div class="text-right">
-                    <div class="text-sm text-gray-600">Submitted on:</div>
+                    <div class="text-sm text-gray-600">Подадено на:</div>
                     <div class="font-medium">@Model.SubmittedAt.ToString("dd.MM.yyyy HH:mm")</div>
                 </div>
                 <a href="/Submissions" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>Back
+                    <i class="fas fa-arrow-left mr-2"></i>Назад
                 </a>
             </div>
         </div>
@@ -38,92 +27,92 @@
         <!-- Submission Info -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Information</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Информация</h3>
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Status:</span>
+                        <span class="text-sm text-gray-600">Статус:</span>
                         <span class="text-sm font-medium">
                             @switch (Model.Status)
                             {
                                 case SubmissionStatus.Completed:
-                                    <span class="text-green-600">Successful</span>
+                                    <span class="text-green-600">Успешно</span>
                                     break;
                                 case SubmissionStatus.CompilationError:
-                                    <span class="text-red-600">Compilation Error</span>
+                                    <span class="text-red-600">Грешка при компилация</span>
                                     break;
                                 case SubmissionStatus.RuntimeError:
-                                    <span class="text-red-600">Runtime Error</span>
+                                    <span class="text-red-600">Грешка при изпълнение</span>
                                     break;
                                 case SubmissionStatus.TimeLimitExceeded:
-                                    <span class="text-orange-600">Time Limit Exceeded</span>
+                                    <span class="text-orange-600">Превишен времеви лимит</span>
                                     break;
                                 case SubmissionStatus.MemoryLimitExceeded:
-                                    <span class="text-orange-600">Memory Limit Exceeded</span>
+                                    <span class="text-orange-600">Превишен лимит на паметта</span>
                                     break;
                                 default:
-                                    <span class="text-yellow-600">In Progress</span>
+                                    <span class="text-yellow-600">В процес</span>
                                     break;
                             }
                         </span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Language:</span>
-                        <span class="text-sm font-medium">@GetLanguageDisplay(Model.Language ?? "")</span>
+                        <span class="text-sm text-gray-600">Език:</span>
+                        <span class="text-sm font-medium">@Model.LanguageDisplay</span>
                     </div>
                     @if (Model.ExecutionTime.HasValue)
                     {
                         <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">Execution Time:</span>
-                            <span class="text-sm font-medium">@Model.ExecutionTime ?? 0 ms</span>
+                            <span class="text-sm text-gray-600">Време за изпълнение:</span>
+                            <span class="text-sm font-medium">@Model.ExecutionTime мс</span>
                         </div>
                     }
                     @if (Model.MemoryUsed.HasValue)
                     {
                         <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">Memory Used:</span>
-                            <span class="text-sm font-medium">@Model.MemoryUsed ?? 0 KB</span>
+                            <span class="text-sm text-gray-600">Използвана памет:</span>
+                            <span class="text-sm font-medium">@Model.MemoryUsed КБ</span>
                         </div>
                     }
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Score:</span>
+                        <span class="text-sm text-gray-600">Резултат:</span>
                         <span class="text-sm font-medium text-green-600">@Model.Score/100</span>
                     </div>
                 </div>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Assignment</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Задача</h3>
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Module:</span>
-                        <span class="text-sm font-medium">@Model.Assignment?.SubjectModule?.Name ?? "-"</span>
+                        <span class="text-sm text-gray-600">Модул:</span>
+                        <span class="text-sm font-medium">@Model.SubjectModuleName</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Due Date:</span>
-                        <span class="text-sm font-medium @(Model.Assignment?.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
-                            @(Model.Assignment?.DueDate != null ? Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm") : "-")
+                        <span class="text-sm text-gray-600">Краен срок:</span>
+                        <span class="text-sm font-medium @(Model.IsDueDatePassed ? "text-red-600" : "text-green-600")">
+                            @(Model.DueDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")
                         </span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Max Points:</span>
-                        <span class="text-sm font-medium">@Model.Assignment?.MaxPoints ?? 0</span>
+                        <span class="text-sm text-gray-600">Максимални точки:</span>
+                        <span class="text-sm font-medium">@Model.MaxPoints</span>
                     </div>
                 </div>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Actions</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Действия</h3>
                 <div class="space-y-2">
-                    @if (Model.Score == 0)
+                    @if (!Model.HasGrade)
                     {
                         <a href="/Grades/Create/@Model.Id" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
-                            <i class="fas fa-star mr-2"></i>Grade
+                            <i class="fas fa-star mr-2"></i>Оцени
                         </a>
                     }
                     else
                     {
                         <a href="/Grades/Details/@Model.Id" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
-                            <i class="fas fa-eye mr-2"></i>View Grade
+                            <i class="fas fa-eye mr-2"></i>Виж оценка
                         </a>
                     }
                 </div>
@@ -132,9 +121,9 @@
 
         <!-- Code Section -->
         <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-3">Code</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-3">Код</h3>
             <div class="bg-gray-900 rounded-lg p-4">
-                <pre class="text-sm text-gray-100 overflow-x-auto"><code>@(Model.Code ?? "No code submitted")</code></pre>
+                <pre class="text-sm text-gray-100 overflow-x-auto"><code>@Model.Code</code></pre>
             </div>
         </div>
 
@@ -142,7 +131,7 @@
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
         {
             <div class="mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Error</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Грешка</h3>
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <pre class="text-sm text-red-800 whitespace-pre-wrap">@Model.ErrorMessage</pre>
                 </div>
@@ -152,7 +141,7 @@
         @if (!string.IsNullOrEmpty(Model.CompilerOutput))
         {
             <div class="mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Compiler Output</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Изход от компилатора</h3>
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <pre class="text-sm text-yellow-800 whitespace-pre-wrap">@Model.CompilerOutput</pre>
                 </div>
@@ -160,46 +149,46 @@
         }
 
         <!-- Test Results -->
-        @if (Model.ExecutionResults != null && Model.ExecutionResults.Any())
+        @if (Model.ExecutionResults.Any())
         {
             <div class="mb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-3">Test Results</h3>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Резултати от тестовете</h3>
                 <div class="space-y-3">
                     @foreach (var result in Model.ExecutionResults.OrderBy(r => r.TestCaseId))
                     {
                         <div class="border rounded-lg p-4 @(result.IsCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200")">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-medium @(result.IsCorrect ? "text-green-800" : "text-red-800")">
-                                    Test @result.TestCaseId
+                                    Тест @result.TestCaseId
                                 </h4>
                                 <span class="text-sm @(result.IsCorrect ? "text-green-600" : "text-red-600")">
                                     @if (result.IsCorrect)
                                     {
-                                        <i class="fas fa-check mr-1"></i><span>Success</span>
+                                        <i class="fas fa-check mr-1"></i><span>Успех</span>
                                     }
                                     else
                                     {
-                                        <i class="fas fa-times mr-1"></i><span>Error</span>
+                                        <i class="fas fa-times mr-1"></i><span>Грешка</span>
                                     }
                                 </span>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span class="font-medium text-gray-700">Input:</span>
-                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.TestCase?.Input ?? "-"</pre>
+                                    <span class="font-medium text-gray-700">Вход:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.Input</pre>
                                 </div>
                                 <div>
-                                    <span class="font-medium text-gray-700">Expected Output:</span>
-                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.TestCase?.ExpectedOutput ?? "-"</pre>
+                                    <span class="font-medium text-gray-700">Очакван изход:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.ExpectedOutput</pre>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <span class="font-medium text-gray-700">Actual Output:</span>
-                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@(result.ActualOutput ?? "No output")</pre>
+                                    <span class="font-medium text-gray-700">Реален изход:</span>
+                                    <pre class="mt-1 bg-gray-100 p-2 rounded text-xs">@result.ActualOutput</pre>
                                 </div>
                                 @if (!string.IsNullOrEmpty(result.ErrorMessage))
                                 {
                                     <div class="md:col-span-2">
-                                        <span class="font-medium text-red-700">Error:</span>
+                                        <span class="font-medium text-red-700">Грешка:</span>
                                         <pre class="mt-1 bg-red-100 p-2 rounded text-xs text-red-800">@result.ErrorMessage</pre>
                                     </div>
                                 }
@@ -210,18 +199,4 @@
             </div>
         }
     </div>
-</div>
-
-@functions {
-    private string GetLanguageDisplay(string language)
-    {
-        return language switch
-        {
-            "csharp" => "C#",
-            "python" => "Python",
-            "java" => "Java",
-            "javascript" => "JavaScript",
-            _ => language
-        };
-    }
-} 
+</div> 

@@ -46,4 +46,49 @@ namespace CodeGrade.ViewModels
         [Required]
         public string Language { get; set; } = string.Empty;
     }
+
+    // New ViewModels for submission details
+    public class SubmissionDetailsViewModel
+    {
+        public int Id { get; set; }
+        public string AssignmentTitle { get; set; } = string.Empty;
+        public string SubjectModuleName { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string StudentNumber { get; set; } = string.Empty;
+        public string ClassGroupName { get; set; } = string.Empty;
+        public int ClassNumber { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public SubmissionStatus Status { get; set; }
+        public string Language { get; set; } = string.Empty;
+        public string LanguageDisplay { get; set; } = string.Empty;
+        public int? ExecutionTime { get; set; }
+        public int? MemoryUsed { get; set; }
+        public int Score { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string CompilerOutput { get; set; } = string.Empty;
+        public List<ExecutionResultViewModel> ExecutionResults { get; set; } = new List<ExecutionResultViewModel>();
+        
+        // Assignment details
+        public DateTime? DueDate { get; set; }
+        public int MaxPoints { get; set; }
+        public int TimeLimit { get; set; }
+        public int MemoryLimit { get; set; }
+        public bool IsDueDatePassed { get; set; }
+        public bool CanSubmitNewSolution { get; set; }
+        
+        // Teacher-specific properties
+        public bool IsTeacherView { get; set; }
+        public bool HasGrade { get; set; }
+    }
+
+    public class ExecutionResultViewModel
+    {
+        public int TestCaseId { get; set; }
+        public bool IsCorrect { get; set; }
+        public string Input { get; set; } = string.Empty;
+        public string ExpectedOutput { get; set; } = string.Empty;
+        public string ActualOutput { get; set; } = string.Empty;
+        public string ErrorMessage { get; set; } = string.Empty;
+    }
 }

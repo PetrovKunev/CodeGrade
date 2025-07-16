@@ -34,6 +34,9 @@ public class GradesController : Controller
 
             var grades = await _context.Grades
                 .Include(g => g.Student)
+                    .ThenInclude(st => st.User)
+                .Include(g => g.Student)
+                    .ThenInclude(st => st.ClassGroup)
                 .Include(g => g.Assignment)
                 .Where(g => g.Assignment.TeacherId == teacher.Id)
                 .OrderByDescending(g => g.GradedAt)

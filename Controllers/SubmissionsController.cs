@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using CodeGrade.Models;
 using CodeGrade.Data;
+using CodeGrade.ViewModels;
 
 namespace CodeGrade.Controllers;
 
@@ -70,6 +71,8 @@ public class SubmissionsController : Controller
         var submission = await _context.Submissions
             .Include(s => s.Student)
                 .ThenInclude(st => st.User)
+            .Include(s => s.Student)
+                .ThenInclude(st => st.ClassGroup)
             .Include(s => s.Assignment)
                 .ThenInclude(a => a.SubjectModule)
             .Include(s => s.ExecutionResults)
@@ -81,18 +84,59 @@ public class SubmissionsController : Controller
             return NotFound();
         }
 
+        // Create the view model
+        var viewModel = new SubmissionDetailsViewModel
+        {
+            Id = submission.Id,
+            AssignmentTitle = submission.Assignment?.Title ?? "No assignment",
+            SubjectModuleName = submission.Assignment?.SubjectModule?.Name ?? "-",
+            StudentName = submission.Student?.User != null 
+                ? $"{submission.Student.User.FirstName} {submission.Student.User.LastName}"
+                : submission.Student?.StudentNumber ?? "Unknown",
+            StudentNumber = submission.Student?.StudentNumber ?? "Unknown",
+            ClassGroupName = submission.Student?.ClassGroup?.Name ?? "-",
+            ClassNumber = submission.Student?.ClassNumber ?? 0,
+            SubmittedAt = submission.SubmittedAt,
+            Status = submission.Status,
+            Language = submission.Language ?? "",
+            LanguageDisplay = GetLanguageDisplay(submission.Language ?? ""),
+            ExecutionTime = submission.ExecutionTime,
+            MemoryUsed = submission.MemoryUsed,
+            Score = submission.Score,
+            Code = submission.Code ?? "No code submitted",
+            ErrorMessage = submission.ErrorMessage ?? "",
+            CompilerOutput = submission.CompilerOutput ?? "",
+            DueDate = submission.Assignment?.DueDate,
+            MaxPoints = submission.Assignment?.MaxPoints ?? 0,
+            TimeLimit = submission.Assignment?.TimeLimit ?? 0,
+            MemoryLimit = submission.Assignment?.MemoryLimit ?? 0,
+            IsDueDatePassed = submission.Assignment != null && submission.Assignment.DueDate <= DateTime.UtcNow,
+            CanSubmitNewSolution = submission.Assignment != null && submission.Assignment.DueDate > DateTime.UtcNow,
+            HasGrade = submission.Score > 0,
+            ExecutionResults = submission.ExecutionResults?.Select(er => new ExecutionResultViewModel
+            {
+                TestCaseId = er.TestCaseId ?? 0,
+                IsCorrect = er.IsCorrect,
+                Input = er.TestCase?.Input ?? "-",
+                ExpectedOutput = er.TestCase?.ExpectedOutput ?? "-",
+                ActualOutput = er.ActualOutput ?? "No output",
+                ErrorMessage = er.ErrorMessage ?? ""
+            }).ToList() ?? new List<ExecutionResultViewModel>()
+        };
+
         // Check if user can view this submission
         if (User.IsInRole("Teacher"))
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == userId);
             
-            if (teacher == null || submission.Assignment.TeacherId != teacher.Id)
+            if (teacher == null || submission.Assignment?.TeacherId != teacher.Id)
             {
                 return Forbid();
             }
             
-            return View("TeacherSubmissionDetails", submission);
+            viewModel.IsTeacherView = true;
+            return View("TeacherSubmissionDetails", viewModel);
         }
         else if (User.IsInRole("Student"))
         {
@@ -104,9 +148,22 @@ public class SubmissionsController : Controller
                 return Forbid();
             }
             
-            return View("StudentSubmissionDetails", submission);
+            viewModel.IsTeacherView = false;
+            return View("StudentSubmissionDetails", viewModel);
         }
 
         return Forbid();
+    }
+
+    private string GetLanguageDisplay(string language)
+    {
+        return language switch
+        {
+            "csharp" => "C#",
+            "python" => "Python",
+            "java" => "Java",
+            "javascript" => "JavaScript",
+            _ => language
+        };
     }
 } 
