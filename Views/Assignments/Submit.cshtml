@@ -309,61 +309,141 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            const codeEditor = $('#code-editor');
-            const charCount = $('#char-count');
-            const lineCount = $('#line-count');
-            const testCodeBtn = $('#test-code-btn');
-            const formatCodeBtn = $('#format-code-btn');
-            const testResultsArea = $('#test-results-area');
-            const testResultsContent = $('#test-results-content');
-            const submitBtn = $('#submit-btn');
-            const submissionStatus = $('#submission-status');
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeEditor = document.getElementById('code-editor');
+            const charCount = document.getElementById('char-count');
+            const lineCount = document.getElementById('line-count');
+            const testCodeBtn = document.getElementById('test-code-btn');
+            const formatCodeBtn = document.getElementById('format-code-btn');
+            const testResultsArea = document.getElementById('test-results-area');
+            const testResultsContent = document.getElementById('test-results-content');
+            const submitBtn = document.getElementById('submit-btn');
+            const submissionStatus = document.getElementById('submission-status');
 
             // Update character and line count
             function updateCounts() {
-                const text = codeEditor.val();
+                const text = codeEditor.value;
                 const chars = text.length;
                 const lines = text.split('\n').length;
-                charCount.text(chars + ' символа');
-                lineCount.text(lines + ' ред' + (lines !== 1 ? 'а' : ''));
+                charCount.textContent = chars + ' символа';
+                lineCount.textContent = lines + ' ред' + (lines !== 1 ? 'а' : '');
             }
 
-            codeEditor.on('input', updateCounts);
-            updateCounts();
+            if (codeEditor) {
+                codeEditor.addEventListener('input', updateCounts);
+                codeEditor.addEventListener('keydown', function(e) {
+                    // Auto-indent on Enter
+                    if (e.key === 'Enter') {
+                        const cursorPos = this.selectionStart;
+                        const textBeforeCursor = this.value.substring(0, cursorPos);
+                        const lastLine = textBeforeCursor.split('\n').pop();
+                        const indentMatch = lastLine.match(/^\s*/);
+                        const indent = indentMatch ? indentMatch[0] : '';
+                        
+                        // Add extra indent for certain characters
+                        if (lastLine.trim().endsWith('{') || lastLine.trim().endsWith(':')) {
+                            setTimeout(() => {
+                                const newCursorPos = this.selectionStart;
+                                const spaces = '    '; // 4 spaces
+                                this.value = this.value.substring(0, newCursorPos) + indent + spaces + this.value.substring(newCursorPos);
+                                this.selectionStart = this.selectionEnd = newCursorPos + indent.length + spaces.length;
+                                updateCounts();
+                            }, 0);
+                        } else {
+                            setTimeout(() => {
+                                const newCursorPos = this.selectionStart;
+                                this.value = this.value.substring(0, newCursorPos) + indent + this.value.substring(newCursorPos);
+                                this.selectionStart = this.selectionEnd = newCursorPos + indent.length;
+                                updateCounts();
+                            }, 0);
+                        }
+                    }
+                    
+                    // Tab support
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                        this.selectionStart = this.selectionEnd = start + 4;
+                        updateCounts();
+                    }
+                });
+                
+                // Auto-save functionality
+                let autoSaveTimeout;
+                codeEditor.addEventListener('input', function() {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        const formData = {
+                            assignmentId: @Model.AssignmentId,
+                            code: this.value,
+                            language: document.getElementById('language-select').value
+                        };
+                        localStorage.setItem('draft-assignment-@Model.AssignmentId', JSON.stringify(formData));
+                    }, 2000);
+                });
+                
+                // Load draft on page load
+                const draftKey = 'draft-assignment-@Model.AssignmentId';
+                const savedDraft = localStorage.getItem(draftKey);
+                
+                if (savedDraft) {
+                    try {
+                        const draft = JSON.parse(savedDraft);
+                        if (draft.code && !codeEditor.value) {
+                            codeEditor.value = draft.code;
+                            if (draft.language) {
+                                document.getElementById('language-select').value = draft.language;
+                            }
+                            showNotification('Заредена е запазена чернова', 'info', 3000);
+                        }
+                    } catch (e) {
+                        console.error('Error loading draft:', e);
+                    }
+                }
+                
+                updateCounts();
+            }
 
             // Test code functionality
-            testCodeBtn.on('click', function() {
-                const code = codeEditor.val().trim();
-                const language = $('#language-select').val();
+            if (testCodeBtn) {
+                testCodeBtn.addEventListener('click', async function() {
+                    const code = codeEditor.value.trim();
+                    const language = document.getElementById('language-select').value;
 
-                if (!code) {
-                    alert('Моля, въведете код за тестване.');
-                    return;
-                }
+                    if (!code) {
+                        alert('Моля, въведете код за тестване.');
+                        return;
+                    }
 
-                testCodeBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Тества се...');
-                testResultsArea.show();
-                testResultsContent.html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Тества се...</div>');
+                    testCodeBtn.disabled = true;
+                    testCodeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Тества се...';
+                    testResultsArea.classList.remove('hidden');
+                    testResultsContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Тества се...</div>';
 
-                $.ajax({
-                    url: '/Assignments/TestCode',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        assignmentId: @Model.AssignmentId,
-                        code: code,
-                        language: language
-                    }),
-                    success: function(response) {
-                        if (response.success) {
+                    try {
+                        const response = await fetch('/Assignments/TestCode', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                assignmentId: @Model.AssignmentId,
+                                code: code,
+                                language: language
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (result.success) {
                             let resultsHtml = '';
-                            response.results.forEach(function(result, index) {
+                            result.results.forEach(function(result, index) {
                                 const statusClass = result.success ? 'text-green-600' : 'text-red-600';
                                 const statusIcon = result.success ? 'fa-check' : 'fa-times';
                                 
                                 resultsHtml += `
-                                    <div class="border-b border-gray-200 pb-3 mb-3 ${index === response.results.length - 1 ? 'border-b-0 pb-0 mb-0' : ''}">
+                                    <div class="border-b border-gray-200 pb-3 mb-3 ${index === result.results.length - 1 ? 'border-b-0 pb-0 mb-0' : ''}">
                                         <div class="flex items-center justify-between mb-2">
                                             <span class="font-medium">Тест ${index + 1}</span>
                                             <span class="${statusClass}">
@@ -392,112 +472,124 @@
                                     </div>
                                 `;
                             });
-                            testResultsContent.html(resultsHtml);
+                            testResultsContent.innerHTML = resultsHtml;
                         } else {
-                            testResultsContent.html(`<div class="text-red-600">${response.error}</div>`);
+                            testResultsContent.innerHTML = `<div class="text-red-600">${result.error}</div>`;
                         }
-                    },
-                    error: function() {
-                        testResultsContent.html('<div class="text-red-600">Възникна грешка при тестването на кода.</div>');
-                    },
-                    complete: function() {
-                        testCodeBtn.prop('disabled', false).html('<i class="fas fa-play mr-1"></i>Тествай с примерите');
+                    } catch (error) {
+                        testResultsContent.innerHTML = '<div class="text-red-600">Възникна грешка при тестването на кода.</div>';
+                    } finally {
+                        testCodeBtn.disabled = false;
+                        testCodeBtn.innerHTML = '<i class="fas fa-play mr-1"></i>Тествай с примерите';
                     }
                 });
-            });
+            }
 
             // Format code functionality
-            formatCodeBtn.on('click', function() {
-                const code = codeEditor.val();
-                if (code.trim()) {
-                    // Simple formatting - you can enhance this
-                    const formatted = code
-                        .replace(/\t/g, '    ') // Replace tabs with spaces
-                        .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove extra blank lines
-                        .trim();
-                    codeEditor.val(formatted);
+            if (formatCodeBtn) {
+                formatCodeBtn.addEventListener('click', function() {
+                    const language = document.getElementById('language-select').value;
+                    const code = codeEditor.value;
+                    
+                    // Basic formatting (in a real app, use proper formatters)
+                    let formatted = code
+                        .split('\n')
+                        .map(line => line.trim())
+                        .join('\n')
+                        .replace(/\{/g, ' {\n')
+                        .replace(/\}/g, '\n}')
+                        .replace(/;/g, ';\n')
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0)
+                        .join('\n');
+                    
+                    codeEditor.value = formatted;
                     updateCounts();
-                }
-            });
+                    showNotification('Кодът е форматиран', 'info');
+                });
+            }
 
             // Form submission
-            $('#submission-form').on('submit', function(e) {
-                // Check if jQuery and AJAX are working
-                if (typeof $ === 'undefined' || typeof $.ajax === 'undefined') {
-                    console.log('jQuery or AJAX not available, using normal form submission');
-                    return; // Let the form submit normally
-                }
-                
-                e.preventDefault();
-                
-                const form = $(this);
-                if (!form.length) {
-                    console.log('Form not found, using normal form submission');
-                    return;
-                }
-                
-                const formData = new FormData(form[0]);
-                const actionUrl = form.attr('action');
-                const token = $('input[name="__RequestVerificationToken"]').val();
-                
-                // Ensure AssignmentId is set properly
-                if (!formData.get('AssignmentId')) {
-                    formData.set('AssignmentId', @Model.AssignmentId);
-                }
-                
-                console.log('Form action URL:', actionUrl);
-                console.log('Assignment ID:', @Model.AssignmentId);
-                console.log('Form data:', Object.fromEntries(formData));
-                console.log('Anti-forgery token:', token);
-                
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Подава се...');
-                submissionStatus.show();
-                
-                $.ajax({
-                    url: actionUrl,
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'RequestVerificationToken': token
-                    },
-                    success: function(response) {
-                        console.log('Success response:', response);
-                        if (response.success) {
-                            // Show success message and reload page
-                            alert(response.message);
-                            location.reload();
+            const submissionForm = document.getElementById('submission-form');
+            if (submissionForm) {
+                submissionForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const code = codeEditor.value.trim();
+                    if (!code) {
+                        showNotification('Въведете код за подаване', 'error');
+                        return;
+                    }
+                    
+                    if (code.length > 50000) {
+                        showNotification('Кодът е твърде дълъг (максимум 50,000 символа)', 'error');
+                        return;
+                    }
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Подава се...';
+                    submissionStatus.classList.remove('hidden');
+                    
+                    // Create FormData and submit via AJAX
+                    const formData = new FormData(this);
+                    
+                    // Ensure AssignmentId is properly set
+                    if (!formData.get('AssignmentId')) {
+                        formData.set('AssignmentId', @Model.AssignmentId);
+                    }
+                    
+                    try {
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            // Clear draft after successful submission
+                            localStorage.removeItem('draft-assignment-@Model.AssignmentId');
+                            // Reload page to show updated submissions
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
                         } else {
-                            // Show error message
-                            alert(response.message);
-                            submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>Подай решение');
-                            submissionStatus.hide();
+                            showNotification(result.message, 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Подай решение';
+                            submissionStatus.classList.add('hidden');
                         }
-                    },
-                    error: function(xhr, status, error) {
+                    } catch (error) {
                         console.error('Submission error:', error);
-                        console.error('Status:', xhr.status);
-                        console.error('Response:', xhr.responseText);
-                        console.error('Status text:', xhr.statusText);
-                        
-                        let errorMessage = 'Възникна грешка при подаването на решението.';
-                        
-                        if (xhr.status === 404) {
-                            errorMessage = 'Страницата не е намерена (404). Проверете дали URL адресът е правилен.';
-                        } else if (xhr.status === 500) {
-                            errorMessage = 'Вътрешна сървърна грешка (500). Моля, опитайте отново.';
-                        } else if (xhr.status === 403) {
-                            errorMessage = 'Нямате права за достъп до тази страница (403).';
-                        }
-                        
-                        alert(errorMessage + '\n\nДетайли: ' + xhr.status + ' - ' + xhr.statusText);
-                        submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i>Подай решение');
-                        submissionStatus.hide();
+                        showNotification('Възникна грешка при подаването на решението. Моля, опитайте отново.', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Подай решение';
+                        submissionStatus.classList.add('hidden');
                     }
                 });
-            });
+            }
+            
+            // Notification system
+            function showNotification(message, type = 'info', duration = 5000) {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${
+                    type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                    'bg-blue-100 text-blue-800 border border-blue-200'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, duration);
+            }
         });
     </script>
 }

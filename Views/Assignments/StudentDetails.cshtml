@@ -138,18 +138,17 @@
                         @if (Model.Assignment != null)
                         {
                             <form asp-action="Submit" asp-route-id="@Model.Assignment.Id" method="post" class="space-y-4" id="submission-form">
-                            <input asp-for="SubmissionForm.AssignmentId" type="hidden" />
+                            <input name="AssignmentId" value="@Model.Assignment.Id" type="hidden" />
                             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
 
                             <div>
-                                <label asp-for="SubmissionForm.Language" class="block text-sm font-medium text-gray-700">Език на програмиране</label>
-                                <select asp-for="SubmissionForm.Language" id="language-select" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    <option value="csharp">C#</option>
-                                    <option value="python">Python</option>
-                                    <option value="java">Java</option>
-                                    <option value="javascript">JavaScript</option>
+                                <label for="language-select" class="block text-sm font-medium text-gray-700">Език на програмиране</label>
+                                <select name="Language" id="language-select" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="csharp" selected="@(Model.SubmissionForm.Language == "csharp")">C#</option>
+                                    <option value="python" selected="@(Model.SubmissionForm.Language == "python")">Python</option>
+                                    <option value="java" selected="@(Model.SubmissionForm.Language == "java")">Java</option>
+                                    <option value="javascript" selected="@(Model.SubmissionForm.Language == "javascript")">JavaScript</option>
                                 </select>
-                                <span asp-validation-for="SubmissionForm.Language" class="text-red-600 text-sm"></span>
                                 <!-- Debug info -->
                                 <div style="display: none;">
                                     <p>Debug: Selected Language = @Model.SubmissionForm.Language</p>
@@ -158,7 +157,7 @@
 
                             <div>
                                 <div class="flex justify-between items-center mb-1">
-                                    <label asp-for="SubmissionForm.Code" class="block text-sm font-medium text-gray-700">Код на решението</label>
+                                    <label for="code-editor" class="block text-sm font-medium text-gray-700">Код на решението</label>
                                     <div class="flex space-x-2 text-xs">
                                         <button type="button" id="test-code-btn" class="text-blue-600 hover:text-blue-800">
                                             <i class="fas fa-play mr-1"></i>Тествай с примерите
@@ -168,8 +167,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <textarea asp-for="SubmissionForm.Code" id="code-editor" rows="15" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono" placeholder="Въведете вашия код тук..." spellcheck="false"></textarea>
-                                <span asp-validation-for="SubmissionForm.Code" class="text-red-600 text-sm"></span>
+                                <textarea name="Code" id="code-editor" rows="15" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono" placeholder="Въведете вашия код тук..." spellcheck="false">@Model.SubmissionForm.Code</textarea>
                                 <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
                                     <span id="char-count">0 символа</span>
                                     <span id="line-count">1 ред</span>
@@ -333,7 +331,7 @@
                 function updateCounts() {
                     const value = codeEditor.value;
                     const chars = value.length;
-                    const lines = value.split('\\n').length;
+                    const lines = value.split('\n').length;
                     
                     console.log('Updating counts - chars:', chars, 'lines:', lines);
                     console.log('Editor value:', value);
@@ -343,7 +341,7 @@
                         console.log('Updated char count element:', charCount.textContent);
                     }
                     if (lineCount) {
-                        lineCount.textContent = lines + ' реда';
+                        lineCount.textContent = lines + ' ред' + (lines !== 1 ? 'а' : '');
                         console.log('Updated line count element:', lineCount.textContent);
                     }
                 }
@@ -354,8 +352,8 @@
                     if (e.key === 'Enter') {
                         const cursorPos = this.selectionStart;
                         const textBeforeCursor = this.value.substring(0, cursorPos);
-                        const lastLine = textBeforeCursor.split('\\n').pop();
-                        const indentMatch = lastLine.match(/^\\s*/);
+                        const lastLine = textBeforeCursor.split('\n').pop();
+                        const indentMatch = lastLine.match(/^\s*/);
                         const indent = indentMatch ? indentMatch[0] : '';
                         
                         // Add extra indent for certain characters
@@ -394,7 +392,7 @@
                     clearTimeout(autoSaveTimeout);
                     autoSaveTimeout = setTimeout(() => {
                         const formData = {
-                            assignmentId: @Model.Assignment.Id,
+                            assignmentId: @(Model.Assignment?.Id ?? 0),
                             code: this.value,
                             language: document.getElementById('language-select').value
                         };
@@ -403,7 +401,7 @@
                 });
                 
                 // Load draft on page load
-                const draftKey = 'draft-assignment-@Model.Assignment.Id';
+                const draftKey = 'draft-assignment-@(Model.Assignment?.Id ?? 0)';
                 const savedDraft = localStorage.getItem(draftKey);
                 console.log('Checking for saved draft:', draftKey);
                 console.log('Saved draft found:', savedDraft);
@@ -451,16 +449,16 @@
                     
                     // Basic formatting (in a real app, use proper formatters)
                     let formatted = code
-                        .split('\\n')
+                        .split('\n')
                         .map(line => line.trim())
-                        .join('\\n')
-                        .replace(/\\{/g, ' {\\n')
-                        .replace(/\\}/g, '\\n}')
-                        .replace(/;/g, ';\\n')
-                        .split('\\n')
+                        .join('\n')
+                        .replace(/\{/g, ' {\n')
+                        .replace(/\}/g, '\n}')
+                        .replace(/;/g, ';\n')
+                        .split('\n')
                         .map(line => line.trim())
                         .filter(line => line.length > 0)
-                        .join('\\n');
+                        .join('\n');
                     
                     codeEditor.value = formatted;
                     updateCounts();
@@ -480,10 +478,10 @@
                     }
                     
                     this.disabled = true;
-                    this.innerHTML = '<i class=\"fas fa-spinner fa-spin mr-1\"></i>Тества...';
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Тества...';
                     
                     try {
-                        const token = document.querySelector('input[name=\"__RequestVerificationToken\"]')?.value;
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                         const response = await fetch('/Assignments/TestCode', {
                             method: 'POST',
                             headers: {
@@ -493,7 +491,7 @@
                             body: JSON.stringify({
                                 code: code,
                                 language: language,
-                                assignmentId: @Model.Assignment.Id
+                                assignmentId: @(Model.Assignment?.Id ?? 0)
                             })
                         });
                         
@@ -508,7 +506,7 @@
                         showNotification('Грешка при тестването: ' + error.message, 'error');
                     } finally {
                         this.disabled = false;
-                        this.innerHTML = '<i class=\"fas fa-play mr-1\"></i>Тествай с примерите';
+                        this.innerHTML = '<i class="fas fa-play mr-1"></i>Тествай с примерите';
                     }
                 });
             }
@@ -537,8 +535,8 @@
                     const formData = new FormData(submissionForm);
                     
                     // Ensure AssignmentId is properly set
-                    if (!formData.get('SubmissionForm.AssignmentId')) {
-                        formData.set('SubmissionForm.AssignmentId', @Model.Assignment.Id);
+                    if (!formData.get('AssignmentId')) {
+                        formData.set('AssignmentId', @(Model.Assignment?.Id ?? 0));
                     }
                     
                     fetch(submissionForm.action, {
@@ -553,7 +551,7 @@
                         if (data.success) {
                             showNotification(data.message, 'success');
                             // Clear draft after successful submission
-                            localStorage.removeItem('draft-assignment-@Model.Assignment.Id');
+                            localStorage.removeItem('draft-assignment-@(Model.Assignment?.Id ?? 0)');
                             // Reload page to show updated submissions
                             setTimeout(() => {
                                 location.reload();
@@ -578,36 +576,36 @@
             // Display test results
             function displayTestResults(results) {
                 if (!results || !results.length) {
-                    testResultsContent.innerHTML = '<p class=\"text-gray-500\">Няма резултати</p>';
+                    testResultsContent.innerHTML = '<p class="text-gray-500">Няма резултати</p>';
                     testResultsArea.classList.remove('hidden');
                     return;
                 }
                 
-                let html = '<div class=\"space-y-2\">';
+                let html = '<div class="space-y-2">';
                 
                 results.forEach((result, index) => {
                     const statusClass = result.success ? 'text-green-600' : 'text-red-600';
                     const statusIcon = result.success ? 'fas fa-check-circle' : 'fas fa-times-circle';
                     
                     html += `
-                        <div class=\"border rounded p-2 \${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}\">
-                            <div class=\"flex items-center justify-between mb-1\">
-                                <span class=\"text-sm font-medium\">
-                                    <i class=\"\${statusIcon} \${statusClass} mr-1\"></i>
-                                    Тест \${index + 1}
+                        <div class="border rounded p-2 ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium">
+                                    <i class="${statusIcon} ${statusClass} mr-1"></i>
+                                    Тест ${index + 1}
                                 </span>
-                                <span class=\"text-xs \${statusClass}\">\${result.success ? '✓' : '✗'}</span>
+                                <span class="text-xs ${statusClass}">${result.success ? '✓' : '✗'}</span>
                             </div>
                     `;
                     
                     if (!result.success) {
                         html += `
-                            <div class=\"text-xs space-y-1\">
-                                <div><strong>Вход:</strong> \${result.input || 'Няма'}</div>
-                                <div><strong>Очакван:</strong> \${result.expectedOutput || 'Няма'}</div>
-                                <div><strong>Получен:</strong> \${result.actualOutput || 'Няма'}</div>
-                                <div><strong>Статус:</strong> \${result.status || 'Неизвестен'}</div>
-                                \${result.errorMessage ? `<div><strong>Грешка:</strong> \${result.errorMessage}</div>` : ''}
+                            <div class="text-xs space-y-1">
+                                <div><strong>Вход:</strong> ${result.input || 'Няма'}</div>
+                                <div><strong>Очакван:</strong> ${result.expectedOutput || 'Няма'}</div>
+                                <div><strong>Получен:</strong> ${result.actualOutput || 'Няма'}</div>
+                                <div><strong>Статус:</strong> ${result.status || 'Неизвестен'}</div>
+                                ${result.errorMessage ? `<div><strong>Грешка:</strong> ${result.errorMessage}</div>` : ''}
                             </div>
                         `;
                     }

@@ -760,14 +760,14 @@ public class AssignmentsController : Controller
                 results = submission.ExecutionResults.Select(er => new
                 {
                     testCaseId = er.TestCaseId,
-                    input = er.TestCase.Input,
-                    expectedOutput = er.TestCase.ExpectedOutput,
+                    input = er.TestCase?.Input ?? "",
+                    expectedOutput = er.TestCase?.ExpectedOutput ?? "",
                     actualOutput = er.ActualOutput,
                     isSuccess = er.IsCorrect,
                     executionTime = er.ExecutionTime,
                     status = er.Status.ToString(),
                     errorMessage = er.ErrorMessage,
-                    points = er.IsCorrect ? er.TestCase.Points : 0
+                    points = er.IsCorrect ? (er.TestCase?.Points ?? 0) : 0
                 }).ToList(),
                 grade = grade != null ? new
                 {
