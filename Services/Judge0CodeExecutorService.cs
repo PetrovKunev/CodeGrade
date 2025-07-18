@@ -1,6 +1,8 @@
 using CodeGrade.Models;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text;
 
 namespace CodeGrade.Services
 {
@@ -16,13 +18,19 @@ namespace CodeGrade.Services
             _logger = logger;
             _httpClient = new HttpClient();
             
-            // Настройка на API ключа
+            // Настройка на API ключа - използваме RapidAPI Judge0 CE
             var apiKey = _configuration["Judge0:ApiKey"];
-            if (!string.IsNullOrEmpty(apiKey))
+            if (string.IsNullOrEmpty(apiKey))
             {
-                _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Key", apiKey);
-                _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Host", "judge0-ce.p.rapidapi.com");
+                _logger.LogError("Judge0 API key is not configured. Please add 'Judge0:ApiKey' to appsettings.json");
+                throw new InvalidOperationException("Judge0 API key is not configured");
             }
+            
+            // RapidAPI Judge0 CE конфигурация
+            _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Key", apiKey);
+            _httpClient.DefaultRequestHeaders.Add("X-RapidAPI-Host", "judge0-ce.p.rapidapi.com");
+            
+            _logger.LogInformation("Judge0CodeExecutorService initialized with API key: {ApiKeyPrefix}...", apiKey.Substring(0, Math.Min(8, apiKey.Length)));
         }
 
         public async Task<ExecutionResult> ExecuteCodeAsync(
@@ -38,32 +46,61 @@ namespace CodeGrade.Services
 
             try
             {
-                // 1. Създаване на submission
+                // Validate and clean test case data
+                var cleanInput = string.IsNullOrWhiteSpace(testCase.Input) ? "" : testCase.Input.Trim();
+                var cleanExpectedOutput = string.IsNullOrWhiteSpace(testCase.ExpectedOutput) ? "" : testCase.ExpectedOutput.Trim();
+                
+                // 1. Създаване на submission според Judge0 CE документацията
                 var submission = new Judge0Submission
                 {
                     SourceCode = code,
                     LanguageId = GetLanguageId(language),
-                    Stdin = testCase.Input,
-                    ExpectedOutput = testCase.ExpectedOutput,
+                    Stdin = cleanInput,
                     CpuTimeLimit = timeLimit,
                     MemoryLimit = memoryLimit * 1024 // Convert MB to KB
                 };
 
-                var createResponse = await _httpClient.PostAsJsonAsync(
-                    "https://judge0-ce.p.rapidapi.com/submissions", submission);
+                // Log the submission details for debugging
+                _logger.LogInformation("Creating Judge0 submission - Language: {Language}, LanguageId: {LanguageId}, TimeLimit: {TimeLimit}, MemoryLimit: {MemoryLimit}", 
+                    language, submission.LanguageId, submission.CpuTimeLimit, submission.MemoryLimit);
+                _logger.LogInformation("TestCase - Input: '{Input}', ExpectedOutput: '{ExpectedOutput}'", 
+                    cleanInput, cleanExpectedOutput);
+                _logger.LogInformation("SourceCode length: {CodeLength} characters", code.Length);
+
+                // Serialize the submission manually to ensure correct format
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                };
+                var jsonContent = JsonSerializer.Serialize(submission, jsonOptions);
+                _logger.LogInformation("Judge0 API request JSON: {JsonContent}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                
+                // Използваме правилния RapidAPI Judge0 CE endpoint
+                var createResponse = await _httpClient.PostAsync(
+                    "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=false", content);
+                
+                // Log the response details
+                _logger.LogInformation("Judge0 API response status: {StatusCode}", createResponse.StatusCode);
                 
                 if (!createResponse.IsSuccessStatusCode)
                 {
-                    throw new Exception($"Failed to create submission: {createResponse.StatusCode}");
+                    var errorContent = await createResponse.Content.ReadAsStringAsync();
+                    _logger.LogError("Judge0 API error response: {ErrorContent}", errorContent);
+                    throw new Exception($"Failed to create submission: {createResponse.StatusCode} - {errorContent}");
                 }
 
                 var createResult = await createResponse.Content.ReadFromJsonAsync<Judge0CreateResponse>();
                 if (createResult?.Token == null)
                 {
+                    var errorContent = await createResponse.Content.ReadAsStringAsync();
+                    _logger.LogError("Failed to get submission token. Response: {ErrorContent}", errorContent);
                     throw new Exception("Failed to get submission token");
                 }
 
                 var token = createResult.Token;
+                _logger.LogInformation("Judge0 submission created with token: {Token}", token);
                 statusCallback?.Invoke(ExecutionStatus.Running);
 
                 // 2. Изчакване на резултата
@@ -71,6 +108,19 @@ namespace CodeGrade.Services
                 
                 var completedAt = DateTime.UtcNow;
                 var executionTime = (int)(completedAt - startTime).TotalMilliseconds;
+
+                _logger.LogInformation("Judge0 execution completed - Status: {Status}, Stdout: '{Stdout}', Stderr: '{Stderr}'", 
+                    result.Status?.Description, result.Stdout, result.Stderr);
+
+                // 3. Сравняване на резултата с очаквания изход
+                var isCorrect = false;
+                if (!string.IsNullOrEmpty(result.Stdout) && !string.IsNullOrEmpty(cleanExpectedOutput))
+                {
+                    // Нормализираме изходите за сравнение
+                    var actualOutput = result.Stdout.Trim().Replace("\r\n", "\n").Replace("\r", "\n");
+                    var expectedOutput = cleanExpectedOutput.Trim().Replace("\r\n", "\n").Replace("\r", "\n");
+                    isCorrect = actualOutput == expectedOutput;
+                }
 
                 return new ExecutionResult
                 {
@@ -85,8 +135,8 @@ namespace CodeGrade.Services
                     StartedAt = startTime,
                     CompletedAt = completedAt,
                     Status = DetermineStatus(result),
-                    IsCorrect = result.Stdout?.Trim() == testCase.ExpectedOutput?.Trim(),
-                    PointsEarned = result.Stdout?.Trim() == testCase.ExpectedOutput?.Trim() ? testCase.Points : 0
+                    IsCorrect = isCorrect,
+                    PointsEarned = isCorrect ? testCase.Points : 0
                 };
             }
             catch (Exception ex)
@@ -205,7 +255,6 @@ namespace CodeGrade.Services
             public string SourceCode { get; set; } = string.Empty;
             public int LanguageId { get; set; }
             public string? Stdin { get; set; }
-            public string? ExpectedOutput { get; set; }
             public int CpuTimeLimit { get; set; }
             public int MemoryLimit { get; set; }
         }
