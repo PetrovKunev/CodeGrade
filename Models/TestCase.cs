@@ -9,7 +9,7 @@ namespace CodeGrade.Models
         public int AssignmentId { get; set; }
         public Assignment Assignment { get; set; } = null!;
         
-        public string Input { get; set; } = string.Empty;
+        public string? Input { get; set; }
         
         [Required]
         public string ExpectedOutput { get; set; } = string.Empty;

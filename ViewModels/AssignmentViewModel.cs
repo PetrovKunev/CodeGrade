@@ -77,7 +77,7 @@ namespace CodeGrade.ViewModels
         public int Id { get; set; }
         
         [Display(Name = "Вход")]
-        public string Input { get; set; } = string.Empty;
+        public string? Input { get; set; }
         
         [Display(Name = "Очакван изход")]
         public string ExpectedOutput { get; set; } = string.Empty;
