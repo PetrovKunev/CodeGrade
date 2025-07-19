@@ -212,9 +212,9 @@ public class AssignmentsController : Controller
             _context.Assignments.Add(assignment);
             await _context.SaveChangesAsync();
 
-            // Add test cases - only add if both input and expected output are provided
+            // Add test cases - only add if expected output is provided (input is optional)
             foreach (var testCaseModel in model.TestCases.Where(tc => 
-                !string.IsNullOrEmpty(tc.Input) && !string.IsNullOrEmpty(tc.ExpectedOutput)))
+                !string.IsNullOrEmpty(tc.ExpectedOutput)))
             {
                 var testCase = new TestCase
                 {
@@ -327,11 +327,11 @@ public class AssignmentsController : Controller
             assignment.Language = model.Language;
             assignment.ClassGroupId = model.ClassGroupId;
 
-            // Update test cases - only add if both input and expected output are provided
+            // Update test cases - only add if expected output is provided (input is optional)
             _context.TestCases.RemoveRange(assignment.TestCases);
             
             foreach (var testCaseModel in model.TestCases.Where(tc => 
-                !string.IsNullOrEmpty(tc.Input) && !string.IsNullOrEmpty(tc.ExpectedOutput)))
+                !string.IsNullOrEmpty(tc.ExpectedOutput)))
             {
                 var testCase = new TestCase
                 {
