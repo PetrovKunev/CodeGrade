@@ -12,7 +12,7 @@ namespace CodeGrade.Models
         public int? TestCaseId { get; set; }
         public TestCase? TestCase { get; set; }
         
-        public string Input { get; set; } = string.Empty;
+        public string? Input { get; set; }
         public string ExpectedOutput { get; set; } = string.Empty;
         public string? ActualOutput { get; set; }
         
