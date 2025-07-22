@@ -106,6 +106,7 @@ public class HomeController : Controller
         var recentSubmissions = await _context.Submissions
             .Include(s => s.Student)
                 .ThenInclude(st => st.User)
+            .Include(s => s.Student.ClassGroup)
             .Include(s => s.Assignment)
             .Where(s => s.Assignment.TeacherId == teacher.Id)
             .OrderByDescending(s => s.SubmittedAt)
