@@ -96,6 +96,7 @@ public class SubmissionsController : Controller
             StudentNumber = submission.Student?.StudentNumber ?? "Unknown",
             ClassGroupName = submission.Student?.ClassGroup?.Name ?? "-",
             ClassNumber = submission.Student?.ClassNumber ?? 0,
+            SubGroup = submission.Student?.SubGroup ?? "",
             SubmittedAt = submission.SubmittedAt,
             Status = submission.Status,
             Language = submission.Language ?? "",

@@ -57,6 +57,7 @@ namespace CodeGrade.ViewModels
         public string StudentNumber { get; set; } = string.Empty;
         public string ClassGroupName { get; set; } = string.Empty;
         public int ClassNumber { get; set; }
+        public string SubGroup { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; }
         public SubmissionStatus Status { get; set; }
         public string Language { get; set; } = string.Empty;

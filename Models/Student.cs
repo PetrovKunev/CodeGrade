@@ -17,8 +17,9 @@ namespace CodeGrade.Models
         public int? ClassGroupId { get; set; }
         public ClassGroup? ClassGroup { get; set; }
         
+        [Required]
         [StringLength(50)]
-        public string? SubGroup { get; set; }
+        public string SubGroup { get; set; } = string.Empty;
         
         [Required]
         [Range(1, 30)]

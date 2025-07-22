@@ -38,8 +38,9 @@ namespace CodeGrade.ViewModels
         [Display(Name = "Клас")]
         public int? ClassGroupId { get; set; }
 
-        [Display(Name = "Група (по желание)")]
-        public string? SubGroup { get; set; }
+        [Required(ErrorMessage = "Групата е задължителна за студенти")]
+        [Display(Name = "Група")]
+        public string SubGroup { get; set; } = string.Empty;
 
         [Range(1, 30, ErrorMessage = "Номерът в клас трябва да е между 1 и 30")]
         [Display(Name = "Номер в клас")]
@@ -57,6 +58,11 @@ namespace CodeGrade.ViewModels
                 if (!ClassGroupId.HasValue)
                 {
                     yield return new ValidationResult("Класът е задължителен за студенти", new[] { nameof(ClassGroupId) });
+                }
+
+                if (string.IsNullOrEmpty(SubGroup))
+                {
+                    yield return new ValidationResult("Групата е задължителна за студенти", new[] { nameof(SubGroup) });
                 }
             }
         }

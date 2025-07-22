@@ -10,7 +10,12 @@
                 <h2 class="text-2xl font-bold text-gray-900">Детайли на решението</h2>
                 <p class="text-lg text-gray-600 mt-1">@Model.AssignmentTitle</p>
                 <p class="text-sm text-gray-500 mt-1">
-                    Ученик: @Model.StudentName (@Model.ClassGroupName - №@Model.ClassNumber)
+                    Ученик: @Model.StudentName (@Model.ClassGroupName - №@Model.ClassNumber
+                    @if (!string.IsNullOrWhiteSpace(Model.SubGroup))
+                    {
+                        <span class="text-gray-400"> - @Model.SubGroup</span>
+                    }
+                    )
                 </p>
             </div>
             <div class="flex items-center space-x-4">

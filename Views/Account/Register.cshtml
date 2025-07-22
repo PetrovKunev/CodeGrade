@@ -76,8 +76,12 @@
                         <span asp-validation-for="ClassGroupId" class="text-red-500 text-sm"></span>
                     </div>
                     <div>
-                        <label asp-for="SubGroup" class="sr-only">Група (по желание)</label>
-                        <input asp-for="SubGroup" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Група (по желание)" />
+                        <label asp-for="SubGroup" class="sr-only">Група</label>
+                        <select asp-for="SubGroup" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
+                            <option value="">Избери група</option>
+                            <option value="Група 1">Група 1</option>
+                            <option value="Група 2">Група 2</option>
+                        </select>
                         <span asp-validation-for="SubGroup" class="text-red-500 text-sm"></span>
                     </div>
                     <div>

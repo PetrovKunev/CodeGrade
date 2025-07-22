@@ -21,6 +21,10 @@
                 </h2>
                 <p class="text-gray-600">
                     Ученик в @student?.ClassGroup?.Name - № @student?.ClassNumber
+                    @if (!string.IsNullOrWhiteSpace(student?.SubGroup))
+                    {
+                        <span class="text-gray-400">(@student.SubGroup)</span>
+                    }
                 </p>
             </div>
         </div>

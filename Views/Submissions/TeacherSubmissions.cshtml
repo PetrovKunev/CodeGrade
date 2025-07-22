@@ -36,6 +36,10 @@
                                             @if (submission.Student.ClassGroup != null)
                                             {
                                                 <span>@submission.Student.ClassGroup.Name - №@submission.Student.ClassNumber</span>
+                                                @if (!string.IsNullOrWhiteSpace(submission.Student.SubGroup))
+                                                {
+                                                    <span class="text-gray-400">(@submission.Student.SubGroup)</span>
+                                                }
                                             }
                                             else
                                             {
