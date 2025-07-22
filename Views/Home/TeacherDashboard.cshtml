@@ -163,6 +163,10 @@
                                         </div>
                                         <div class="text-sm text-gray-500">
                                             @submission.Student?.ClassGroup?.Name - №@submission.Student?.ClassNumber
+                                            @if (!string.IsNullOrEmpty(submission.Student?.SubGroup))
+                                            {
+                                                <span class="text-gray-400">(@submission.Student.SubGroup)</span>
+                                            }
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
