@@ -118,7 +118,7 @@ public class SubmissionsController : Controller
                 TestCaseId = er.TestCaseId ?? 0,
                 IsCorrect = er.IsCorrect,
                 Input = er.TestCase?.Input ?? "-",
-                ExpectedOutput = er.TestCase?.ExpectedOutput ?? "-",
+                ExpectedOutput = er.ExpectedOutput ?? "-",
                 ActualOutput = er.ActualOutput ?? "No output",
                 ErrorMessage = er.ErrorMessage ?? ""
             }).ToList() ?? new List<ExecutionResultViewModel>()
