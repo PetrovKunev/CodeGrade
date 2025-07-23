@@ -82,6 +82,20 @@
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-star mr-2"></i>Оценка: @grade.Points/100
                                 </p>
+                                @if (grade.GradeValue.HasValue)
+                                {
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-graduation-cap mr-2"></i>6-бална: 
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                            @(grade.GradeValue >= 5.5 ? "bg-green-100 text-green-800" : 
+                                              grade.GradeValue >= 4.5 ? "bg-blue-100 text-blue-800" : 
+                                              grade.GradeValue >= 3.5 ? "bg-yellow-100 text-yellow-800" : 
+                                              grade.GradeValue >= 3.0 ? "bg-orange-100 text-orange-800" : 
+                                              "bg-red-100 text-red-800")">
+                                            @grade.GradeValue
+                                        </span>
+                                    </p>
+                                }
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-percentage mr-2"></i>Процент: @percentage.ToString("F1")%
                                 </p>

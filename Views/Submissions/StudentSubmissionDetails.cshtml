@@ -75,6 +75,10 @@
                         <span class="text-sm text-gray-600">Резултат:</span>
                         <span class="text-sm font-medium text-green-600">@Model.Score/100</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">6-бална скала:</span>
+                        <span class="text-sm font-medium text-green-600">@GetGradeFromScore(Model.Score)</span>
+                    </div>
                 </div>
             </div>
 
@@ -183,4 +187,16 @@
             </div>
         }
     </div>
-</div> 
+</div>
+
+@functions {
+    private string GetGradeFromScore(int score)
+    {
+        if (score >= 90) return "Отличен (6)";
+        if (score >= 80) return "Много добър (5)";
+        if (score >= 70) return "Добър (4)";
+        if (score >= 60) return "Среден (3)";
+        if (score >= 50) return "Слаб (2)";
+        return "Недостатъчен (1)";
+    }
+} 

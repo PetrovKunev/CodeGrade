@@ -18,6 +18,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ученик</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Задача</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Оценка</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">6-бална</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Процент</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
@@ -27,6 +28,7 @@
                         @foreach (var grade in Model)
                         {
                             var percentage = (double)grade.Points / 100 * 100;
+                            var grade6Scale = grade.GradeValue ?? 2; // По подразбиране 2, ако няма оценка
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     @if (grade.Student?.User != null)
@@ -54,6 +56,23 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <span class="font-medium">@grade.Points/100</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (grade.GradeValue.HasValue)
+                                    {
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                            @(grade.GradeValue >= 5.5 ? "bg-green-100 text-green-800" : 
+                                              grade.GradeValue >= 4.5 ? "bg-blue-100 text-blue-800" : 
+                                              grade.GradeValue >= 3.5 ? "bg-yellow-100 text-yellow-800" : 
+                                              grade.GradeValue >= 3.0 ? "bg-orange-100 text-orange-800" : 
+                                              "bg-red-100 text-red-800")">
+                                            @grade.GradeValue
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    }
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if (percentage >= 80)
