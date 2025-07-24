@@ -1,0 +1,89 @@
+@model CodeGrade.ViewModels.SubmissionDetailsViewModel
+@using CodeGrade.Models
+@{
+    ViewData["Title"] = "Изтриване на решение";
+}
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Изтриване на решение</h2>
+            <p class="text-red-600 font-medium">Внимание: Това действие не може да бъде отменено!</p>
+        </div>
+
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">
+                        Сигурни ли сте, че искате да изтриете това решение?
+                    </h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <p>Това ще изтрие окончателно решението и всички свързани с него данни.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Информация за решението</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Задача:</span>
+                        <span class="text-sm font-medium">@Model.AssignmentTitle</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Ученик:</span>
+                        <span class="text-sm font-medium">@Model.StudentName</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Клас:</span>
+                        <span class="text-sm font-medium">@Model.ClassGroupName - №@Model.ClassNumber</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.SubGroup))
+                    {
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Подгрупа:</span>
+                            <span class="text-sm font-medium">@Model.SubGroup</span>
+                        </div>
+                    }
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Подадено на:</span>
+                        <span class="text-sm font-medium">@Model.SubmittedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Език:</span>
+                        <span class="text-sm font-medium">@Model.LanguageDisplay</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Резултат:</span>
+                        <span class="text-sm font-medium">@Model.Score/100</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Код</h3>
+                <div class="bg-gray-900 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    <pre class="text-sm text-gray-100"><code>@Model.Code</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center">
+            <a href="/Submissions/Details/@Model.Id" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Назад
+            </a>
+            
+            <form asp-action="Delete" method="post" class="inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Изтрий окончателно
+                </button>
+            </form>
+        </div>
+    </div>
+</div> 

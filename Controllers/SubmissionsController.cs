@@ -189,6 +189,100 @@ public class SubmissionsController : Controller
         return Forbid();
     }
 
+    // GET: Submissions/Delete/5
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var submission = await _context.Submissions
+            .Include(s => s.Student)
+                .ThenInclude(st => st.User)
+            .Include(s => s.Student)
+                .ThenInclude(st => st.ClassGroup)
+            .Include(s => s.Assignment)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (submission == null)
+        {
+            return NotFound();
+        }
+
+        // Check if the teacher owns the assignment
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == userId);
+        
+        if (teacher == null || submission.Assignment?.TeacherId != teacher.Id)
+        {
+            return Forbid();
+        }
+
+        var viewModel = new SubmissionDetailsViewModel
+        {
+            Id = submission.Id,
+            AssignmentTitle = submission.Assignment?.Title ?? "No assignment",
+            StudentName = submission.Student?.User != null 
+                ? $"{submission.Student.User.FirstName} {submission.Student.User.LastName}"
+                : submission.Student?.StudentNumber ?? "Unknown",
+            StudentNumber = submission.Student?.StudentNumber ?? "Unknown",
+            ClassGroupName = submission.Student?.ClassGroup?.Name ?? "-",
+            ClassNumber = submission.Student?.ClassNumber ?? 0,
+            SubGroup = submission.Student?.SubGroup ?? "",
+            SubmittedAt = submission.SubmittedAt,
+            Status = submission.Status,
+            Language = submission.Language ?? "",
+            LanguageDisplay = GetLanguageDisplay(submission.Language ?? ""),
+            Score = submission.Score,
+            Code = submission.Code ?? "No code submitted"
+        };
+
+        return View("Delete", viewModel);
+    }
+
+    // POST: Submissions/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var submission = await _context.Submissions
+            .Include(s => s.Assignment)
+            .Include(s => s.ExecutionResults)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (submission == null)
+        {
+            return NotFound();
+        }
+
+        // Check if the teacher owns the assignment
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == userId);
+        
+        if (teacher == null || submission.Assignment?.TeacherId != teacher.Id)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            // Remove execution results first (due to foreign key constraints)
+            _context.ExecutionResults.RemoveRange(submission.ExecutionResults);
+            
+            // Remove the submission
+            _context.Submissions.Remove(submission);
+            
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Решението беше успешно изтрито.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting submission {SubmissionId}", id);
+            TempData["ErrorMessage"] = "Възникна грешка при изтриването на решението.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+    }
+
     private string GetLanguageDisplay(string language)
     {
         return language switch
