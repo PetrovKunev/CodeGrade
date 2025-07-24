@@ -59,7 +59,7 @@ namespace CodeGrade.ViewModels
         public int ClassNumber { get; set; }
         public string SubGroup { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; }
-        public SubmissionStatus Status { get; set; }
+        public Models.SubmissionStatus Status { get; set; }
         public string Language { get; set; } = string.Empty;
         public string LanguageDisplay { get; set; } = string.Empty;
         public int? ExecutionTime { get; set; }
@@ -91,5 +91,6 @@ namespace CodeGrade.ViewModels
         public string ExpectedOutput { get; set; } = string.Empty;
         public string ActualOutput { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
+        public int PointsEarned { get; set; }
     }
 }

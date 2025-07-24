@@ -66,6 +66,7 @@ public class SubmissionsController : Controller
     }
 
     [Authorize(Roles = "Student")]
+    [Route("Submissions/AssignmentSubmissions/{assignmentId}")]
     public async Task<IActionResult> AssignmentSubmissions(int assignmentId)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -84,6 +85,7 @@ public class SubmissionsController : Controller
         var submissions = await _context.Submissions
             .Include(s => s.ExecutionResults)
             .ThenInclude(er => er.TestCase)
+            .Include(s => s.Assignment)
             .Where(s => s.StudentId == student.Id && s.AssignmentId == assignmentId)
             .OrderByDescending(s => s.SubmittedAt)
             .ToListAsync();
@@ -148,10 +150,11 @@ public class SubmissionsController : Controller
             {
                 TestCaseId = er.TestCaseId ?? 0,
                 IsCorrect = er.IsCorrect,
-                Input = er.TestCase?.Input ?? "-",
+                Input = er.Input ?? er.TestCase?.Input ?? "-",
                 ExpectedOutput = er.ExpectedOutput ?? "-",
                 ActualOutput = er.ActualOutput ?? "No output",
-                ErrorMessage = er.ErrorMessage ?? ""
+                ErrorMessage = er.ErrorMessage ?? "",
+                PointsEarned = er.PointsEarned
             }).ToList() ?? new List<ExecutionResultViewModel>()
         };
 

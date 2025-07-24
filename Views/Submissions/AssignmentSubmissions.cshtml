@@ -29,9 +29,9 @@
             <div class="space-y-4">
                 @foreach (var submission in Model)
                 {
-                    var totalPoints = submission.ExecutionResults.Sum(er => er.PointsEarned);
+                    var totalPoints = submission.ExecutionResults?.Sum(er => er.PointsEarned) ?? 0;
                     var maxPoints = assignment?.MaxPoints ?? 100;
-                    var percentage = (double)totalPoints / maxPoints * 100;
+                    var percentage = maxPoints > 0 ? (double)totalPoints / maxPoints * 100 : 0;
                     
                     <div class="border border-gray-200 rounded-lg p-4 @(submission == Model.FirstOrDefault() ? "bg-green-50 border-green-200" : "")">
                         <div class="flex items-center justify-between mb-3">
