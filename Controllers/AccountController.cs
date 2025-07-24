@@ -177,7 +177,7 @@ namespace CodeGrade.Controllers
                     // Sign in the user
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     
-                    TempData["SuccessMessage"] = "Регистрацията е успешна! Добре дошли в CodeGrade.";
+                    TempData["SuccessMessage"] = "🎉 Регистрацията е успешна! Добре дошли в CodeGrade.";
                     
                     // Redirect based on role
                     if (model.Role == "Teacher")

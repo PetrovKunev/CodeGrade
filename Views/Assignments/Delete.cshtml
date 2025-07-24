@@ -107,8 +107,7 @@
             
             <form asp-action="Delete" method="post" class="inline">
                 <input type="hidden" asp-for="Id" />
-                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors" 
-                        onclick="return confirm('Сигурни ли сте, че искате да изтриете тази задача? Това действие е необратимо!')">
+                <button type="submit" id="delete-btn" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
                     <i class="fas fa-trash mr-2"></i>Изтрий задачата
                 </button>
             </form>
@@ -118,11 +117,62 @@
 
 @section Scripts {
     <script>
-        // Add additional confirmation for dangerous action
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (!confirm('ПОСЛЕДНА ВЪЗМОЖНОСТ! Сигурни ли сте, че искате да изтриете тази задача и всички свързани данни?')) {
-                e.preventDefault();
-            }
+        // Enhanced confirmation modal system
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+            modal.innerHTML = `
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">${title}</h3>
+                        <div class="mt-2 px-7 py-3">
+                            <p class="text-sm text-gray-500">${message}</p>
+                        </div>
+                        <div class="items-center px-4 py-3 flex space-x-3">
+                            <button id="confirm-yes" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md flex-1 shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                                Да, изтрий
+                            </button>
+                            <button id="confirm-no" class="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md flex-1 shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                Отмени
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Event listeners
+            modal.querySelector('#confirm-yes').addEventListener('click', () => {
+                modal.remove();
+                onConfirm();
+            });
+            
+            modal.querySelector('#confirm-no').addEventListener('click', () => {
+                modal.remove();
+            });
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Add enhanced confirmation for dangerous action
+        document.getElementById('delete-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            showConfirmModal(
+                'Изтриване на задача',
+                'ПОСЛЕДНА ВЪЗМОЖНОСТ! Сигурни ли сте, че искате да изтриете тази задача и всички свързани данни? Това действие е необратимо!',
+                () => {
+                    document.querySelector('form').submit();
+                }
+            );
         });
     </script>
 }

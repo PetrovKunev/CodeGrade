@@ -29,9 +29,25 @@ namespace CodeGrade.Services
                 throw new ArgumentException($"Submission with ID {submissionId} not found");
             }
 
-            // Calculate total points from execution results
-            var totalPointsEarned = submission.ExecutionResults.Sum(er => er.PointsEarned);
-            var maxPossiblePoints = submission.Assignment.MaxPoints;
+            // Намери най-добрия резултат за тази задача от всички решения
+            var bestSubmission = await _context.Submissions
+                .Include(s => s.ExecutionResults)
+                .ThenInclude(er => er.TestCase)
+                .Where(s => s.StudentId == submission.StudentId && 
+                           s.AssignmentId == submission.AssignmentId &&
+                           s.Status == SubmissionStatus.Completed)
+                .OrderByDescending(s => s.ExecutionResults.Sum(er => er.PointsEarned))
+                .FirstOrDefaultAsync();
+
+            if (bestSubmission == null)
+            {
+                // Ако няма завършени решения, не създавай оценка
+                return null;
+            }
+
+            // Изчисли оценката от най-добрия резултат
+            var totalPointsEarned = bestSubmission.ExecutionResults.Sum(er => er.PointsEarned);
+            var maxPossiblePoints = bestSubmission.Assignment.MaxPoints;
 
             // Calculate percentage
             var percentage = maxPossiblePoints > 0 ? (double)totalPointsEarned / maxPossiblePoints * 100 : 0;
@@ -121,12 +137,8 @@ namespace CodeGrade.Services
             var grades = await GetStudentGradesAsync(studentId);
 
             var totalAssignments = grades.Count;
-            var completedAssignments = grades.Count; // All grades represent completed assignments
+            var completedAssignments = grades.Count; // Всички оценки представляват завършени задачи
             var averageGrade = grades.Any() ? grades.Average(g => g.GradeValue ?? 0) : 0;
-            var averagePoints = grades.Any() ? grades.Average(g => g.Points) : 0;
-            var maxPoints = grades.Any() ? grades.Sum(g => g.Assignment.MaxPoints) : 0;
-            var totalPointsEarned = grades.Any() ? grades.Sum(g => g.Points) : 0;
-            var overallPercentage = maxPoints > 0 ? (totalPointsEarned / (double)maxPoints) * 100 : 0;
             var bestGrade = grades.Any() ? grades.Max(g => g.GradeValue ?? 0) : 0;
 
             return new Dictionary<string, double>
@@ -134,10 +146,6 @@ namespace CodeGrade.Services
                 ["TotalAssignments"] = totalAssignments,
                 ["CompletedAssignments"] = completedAssignments,
                 ["AverageGrade"] = averageGrade,
-                ["AveragePoints"] = averagePoints,
-                ["OverallPercentage"] = overallPercentage,
-                ["TotalPointsEarned"] = totalPointsEarned,
-                ["MaxPossiblePoints"] = maxPoints,
                 ["BestGrade"] = bestGrade
             };
         }

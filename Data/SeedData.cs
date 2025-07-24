@@ -12,8 +12,8 @@ namespace CodeGrade.Data
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
+            // Ensure database is created and apply all migrations
+            await context.Database.MigrateAsync();
 
             // Seed roles
             string[] roles = { "Admin", "Teacher", "Student" };
@@ -84,7 +84,7 @@ namespace CodeGrade.Data
                 {
                     UserName = "teacher@codegrade.com",
                     Email = "teacher@codegrade.com",
-                    FirstName = "Иван",
+                    FirstName = "Явор",
                     LastName = "Петров",
                     EmailConfirmed = true,
                     IsActive = true
@@ -99,7 +99,7 @@ namespace CodeGrade.Data
                     {
                         UserId = teacherUser.Id,
                         Department = "Информатика",
-                        Title = "Ст. преподавател"
+                        Title = "Преподавател"
                     };
 
                     context.Teachers.Add(teacher);
@@ -126,13 +126,14 @@ namespace CodeGrade.Data
                 {
                     await userManager.AddToRoleAsync(studentUser, "Student");
 
-                    var firstClassGroup = context.ClassGroups.First();
+                    var classGroup11A = context.ClassGroups.FirstOrDefault(cg => cg.Name == "11А");
                     var student = new Student
                     {
                         UserId = studentUser.Id,
                         StudentNumber = "2024001",
-                        ClassGroupId = firstClassGroup.Id,
-                        ClassNumber = 1
+                        ClassGroupId = classGroup11A?.Id,
+                        SubGroup = "1",
+                        ClassNumber = 15
                     };
 
                     context.Students.Add(student);

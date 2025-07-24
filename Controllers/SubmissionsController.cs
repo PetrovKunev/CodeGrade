@@ -65,6 +65,36 @@ public class SubmissionsController : Controller
         return View("MySubmissions", submissions);
     }
 
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> AssignmentSubmissions(int assignmentId)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+            return NotFound();
+
+        var assignment = await _context.Assignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+        if (assignment == null)
+            return NotFound();
+
+        var submissions = await _context.Submissions
+            .Include(s => s.ExecutionResults)
+            .ThenInclude(er => er.TestCase)
+            .Where(s => s.StudentId == student.Id && s.AssignmentId == assignmentId)
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+
+        ViewBag.Assignment = assignment;
+        ViewBag.SubmissionsCount = submissions.Count;
+        ViewBag.MaxSubmissions = 3;
+
+        return View("AssignmentSubmissions", submissions);
+    }
+
     // GET: Submissions/Details/5
     public async Task<IActionResult> Details(int id)
     {

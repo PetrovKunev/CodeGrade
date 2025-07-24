@@ -229,7 +229,7 @@ public class AssignmentsController : Controller
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Задачата е създадена успешно!";
+            TempData["SuccessMessage"] = "✅ Задачата е създадена успешно! Можете да добавите тестови случаи и да я активирате.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -346,7 +346,7 @@ public class AssignmentsController : Controller
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Задачата е обновена успешно!";
+            TempData["SuccessMessage"] = "✅ Задачата е обновена успешно! Промените са запазени.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -399,7 +399,7 @@ public class AssignmentsController : Controller
         {
             _context.Assignments.Remove(assignment);
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Задачата е изтрита успешно!";
+            TempData["SuccessMessage"] = "✅ Задачата е изтрита успешно! Всички свързани данни са премахнати.";
         }
 
         return RedirectToAction(nameof(Index));
@@ -435,7 +435,7 @@ public class AssignmentsController : Controller
         // Check if assignment is active and not past due date
         if (!assignment.IsActive || assignment.DueDate <= DateTime.UtcNow)
         {
-            TempData["ErrorMessage"] = "Задачата е неактивна или крайният срок е изтекъл.";
+            TempData["ErrorMessage"] = "⚠️ Задачата е неактивна или крайният срок е изтекъл. Не можете да подавате решения.";
             return RedirectToAction("Details", new { id = id });
         }
 
@@ -467,10 +467,17 @@ public class AssignmentsController : Controller
             Language = assignment.Language ?? "csharp"
         };
 
+        var submissionsCount = await _context.Submissions
+            .Where(s => s.StudentId == student.Id && s.AssignmentId == assignment.Id)
+            .CountAsync();
+        
         ViewBag.PublicTestCases = publicTestCases;
         ViewBag.StudentSubmissions = studentSubmissions;
         ViewBag.GradeLookup = gradeLookup;
-        ViewBag.CanSubmit = assignment.DueDate > DateTime.UtcNow;
+        ViewBag.SubmissionsCount = submissionsCount;
+        ViewBag.MaxSubmissions = 3;
+        ViewBag.RemainingSubmissions = Math.Max(0, 3 - submissionsCount);
+        ViewBag.CanSubmit = submissionsCount < 3 && assignment.DueDate > DateTime.UtcNow;
         ViewBag.TimeRemaining = assignment.DueDate > DateTime.UtcNow 
             ? $"{(assignment.DueDate - DateTime.UtcNow).Days} дни" 
             : "Изтекъл";
@@ -512,12 +519,29 @@ public class AssignmentsController : Controller
         // Check if assignment is still active and not past due date
         if (!assignment.IsActive || assignment.DueDate <= DateTime.UtcNow)
         {
-            TempData["ErrorMessage"] = "Задачата е неактивна или крайният срок е изтекъл.";
+            TempData["ErrorMessage"] = "⚠️ Задачата е неактивна или крайният срок е изтекъл. Не можете да подавате решения.";
             
             // Check if this is an AJAX request
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 return Json(new { success = false, message = TempData["ErrorMessage"] });
+            }
+            
+            return RedirectToAction("Submit", new { id = assignmentId });
+        }
+
+        // Проверка за ограничение от 3 решения
+        var existingSubmissionsCount = await _context.Submissions
+            .Where(s => s.StudentId == student.Id && s.AssignmentId == assignment.Id)
+            .CountAsync();
+        
+        if (existingSubmissionsCount >= 3)
+        {
+            TempData["ErrorMessage"] = "🚫 Достигнат е лимитът от 3 решения за тази задача. Можете да прегледате всички решения.";
+            
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = TempData["ErrorMessage"], showModal = true });
             }
             
             return RedirectToAction("Submit", new { id = assignmentId });
@@ -613,7 +637,7 @@ public class AssignmentsController : Controller
                 submission.Status = SubmissionStatus.Completed;
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Решението е подадено и оценено успешно! Резултат: {grade.Points} точки (Оценка: {grade.GradeValue}).";
+                TempData["SuccessMessage"] = $"🎉 Решението е подадено и оценено успешно! Резултат: {grade.Points} точки (Оценка: {grade.GradeValue}).";
                 
                 // Check if this is an AJAX request
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -627,7 +651,7 @@ public class AssignmentsController : Controller
                 submission.Status = SubmissionStatus.RuntimeError;
                 await _context.SaveChangesAsync();
                 
-                TempData["ErrorMessage"] = "Възникна грешка при изпълнението на кода. Моля, опитайте отново.";
+                TempData["ErrorMessage"] = "❌ Възникна грешка при изпълнението на кода. Моля, проверете синтаксиса и опитайте отново.";
                 
                 // Check if this is an AJAX request
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -645,7 +669,7 @@ public class AssignmentsController : Controller
             .Select(e => e.ErrorMessage)
             .ToList();
         
-        TempData["ErrorMessage"] = "Грешка при подаването на решението: " + string.Join(", ", errorMessages);
+                    TempData["ErrorMessage"] = "❌ Грешка при подаването на решението: " + string.Join(", ", errorMessages);
         
         // Check if this is an AJAX request
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
