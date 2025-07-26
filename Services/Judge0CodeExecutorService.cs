@@ -50,12 +50,15 @@ namespace CodeGrade.Services
                 var cleanInput = string.IsNullOrWhiteSpace(testCase.Input) ? "" : testCase.Input.Trim();
                 var cleanExpectedOutput = string.IsNullOrWhiteSpace(testCase.ExpectedOutput) ? "" : testCase.ExpectedOutput.Trim();
                 
+                // Process input based on language requirements
+                var processedInput = ProcessInputForLanguage(cleanInput, language);
+                
                 // 1. Създаване на submission според Judge0 CE документацията
                 var submission = new Judge0Submission
                 {
                     SourceCode = code,
                     LanguageId = GetLanguageId(language),
-                    Stdin = cleanInput,
+                    Stdin = processedInput,
                     CpuTimeLimit = timeLimit,
                     MemoryLimit = memoryLimit * 1024 // Convert MB to KB
                 };
@@ -63,8 +66,8 @@ namespace CodeGrade.Services
                 // Log the submission details for debugging
                 _logger.LogInformation("Creating Judge0 submission - Language: {Language}, LanguageId: {LanguageId}, TimeLimit: {TimeLimit}, MemoryLimit: {MemoryLimit}", 
                     language, submission.LanguageId, submission.CpuTimeLimit, submission.MemoryLimit);
-                _logger.LogInformation("TestCase - Input: '{Input}', ExpectedOutput: '{ExpectedOutput}'", 
-                    cleanInput, cleanExpectedOutput);
+                _logger.LogInformation("TestCase - Original Input: '{OriginalInput}', Processed Input: '{ProcessedInput}', ExpectedOutput: '{ExpectedOutput}'", 
+                    cleanInput, processedInput, cleanExpectedOutput);
                 _logger.LogInformation("SourceCode length: {CodeLength} characters", code.Length);
 
                 // Serialize the submission manually to ensure correct format
@@ -247,6 +250,77 @@ namespace CodeGrade.Services
                 8 => ExecutionStatus.MemoryLimitExceeded, // Memory Limit Exceeded
                 _ => ExecutionStatus.RuntimeError
             };
+        }
+
+        /// <summary>
+        /// Обработва входните данни според изискванията на езика за програмиране
+        /// </summary>
+        private string ProcessInputForLanguage(string input, string language)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            var cleanInput = input.Trim();
+            
+            switch (language.ToLower())
+            {
+                case "csharp":
+                    // C# Console.ReadLine() очаква отделни редове
+                    return ProcessInputForCSharp(cleanInput);
+                    
+                case "python":
+                    // Python може да работи с различни формати, но предпочитаме консистентност
+                    return ProcessInputForPython(cleanInput);
+                    
+                case "java":
+                    // Java Scanner.nextLine() очаква отделни редове
+                    return ProcessInputForJava(cleanInput);
+                    
+                case "javascript":
+                    // JavaScript обикновено чете цял вход като string
+                    return cleanInput;
+                    
+                default:
+                    // За други езици, запазваме оригиналния формат
+                    return cleanInput;
+            }
+        }
+
+        /// <summary>
+        /// Обработва входните данни за C# - разделя интервал-разделени стойности на отделни редове
+        /// </summary>
+        private string ProcessInputForCSharp(string input)
+        {
+            // Разделяме по различни разделители: интервали, табулации, нови редове
+            var separators = new[] { ' ', '\t', '\n', '\r' };
+            var values = input.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            
+            // Съединяваме с нови редове за Console.ReadLine()
+            return string.Join("\n", values);
+        }
+
+        /// <summary>
+        /// Обработва входните данни за Python - подобно на C#
+        /// </summary>
+        private string ProcessInputForPython(string input)
+        {
+            // Python input() чете един ред, но можем да разделим за множество input() извиквания
+            var separators = new[] { ' ', '\t', '\n', '\r' };
+            var values = input.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            
+            return string.Join("\n", values);
+        }
+
+        /// <summary>
+        /// Обработва входните данни за Java - подобно на C#
+        /// </summary>
+        private string ProcessInputForJava(string input)
+        {
+            // Java Scanner.nextLine() чете един ред
+            var separators = new[] { ' ', '\t', '\n', '\r' };
+            var values = input.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            
+            return string.Join("\n", values);
         }
 
         // Judge0 API модели
