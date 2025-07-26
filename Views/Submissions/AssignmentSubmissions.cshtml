@@ -17,7 +17,7 @@
                 <p class="text-gray-600">Всички решения за задачата</p>
             </div>
             <div class="text-right">
-                <p class="text-sm text-gray-500">Решения: @submissionsCount/@maxSubmissions</p>
+                <p class="text-sm text-gray-500 mb-2">Решения: @submissionsCount/@maxSubmissions</p>
                 @if (submissionsCount < maxSubmissions && assignment?.DueDate > DateTime.UtcNow)
                 {
                     <a href="/Assignments/Submit/@assignment.Id" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">
