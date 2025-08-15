@@ -16,7 +16,7 @@ namespace CodeGrade.Models
         public int Points { get; set; }
         
         [Range(2, 6)]
-        public int? GradeValue { get; set; } // 2-6 скала
+        public decimal? GradeValue { get; set; } // 2-6 скала с десетични стойности
         
         [StringLength(500)]
         public string? Comments { get; set; }

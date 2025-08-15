@@ -28,7 +28,7 @@
                         @foreach (var grade in Model)
                         {
                             var percentage = (double)grade.Points / 100 * 100;
-                            var grade6Scale = grade.GradeValue ?? 2; // По подразбиране 2, ако няма оценка
+                            var grade6Scale = grade.GradeValue ?? 2m; // По подразбиране 2, ако няма оценка
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     @if (grade.Student?.User != null)
@@ -61,10 +61,10 @@
                                     @if (grade.GradeValue.HasValue)
                                     {
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            @(grade.GradeValue >= 5.5 ? "bg-green-100 text-green-800" : 
-                                              grade.GradeValue >= 4.5 ? "bg-blue-100 text-blue-800" : 
-                                              grade.GradeValue >= 3.5 ? "bg-yellow-100 text-yellow-800" : 
-                                              grade.GradeValue >= 3.0 ? "bg-orange-100 text-orange-800" : 
+                                            @(grade.GradeValue >= 5.5m ? "bg-green-100 text-green-800" : 
+                                              grade.GradeValue >= 4.5m ? "bg-blue-100 text-blue-800" : 
+                                              grade.GradeValue >= 3.5m ? "bg-yellow-100 text-yellow-800" : 
+                                              grade.GradeValue >= 3.0m ? "bg-orange-100 text-orange-800" : 
                                               "bg-red-100 text-red-800")">
                                             @grade.GradeValue
                                         </span>

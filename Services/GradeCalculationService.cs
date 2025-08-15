@@ -110,16 +110,16 @@ namespace CodeGrade.Services
             await _context.SaveChangesAsync();
         }
 
-        private int CalculateGradeValue(double percentage)
+        private decimal CalculateGradeValue(double percentage)
         {
             return percentage switch
             {
-                >= 90 => 6,    // Отличен
-                >= 80 => 5,    // Много добър
-                >= 70 => 4,    // Добър
-                >= 60 => 3,    // Среден
-                >= 50 => 2,    // Слаб
-                _ => 2         // Слаб (по подразбиране)
+                >= 90 => 6.0m,    // Отличен
+                >= 80 => 5.0m,    // Много добър
+                >= 70 => 4.0m,    // Добър
+                >= 60 => 3.0m,    // Среден
+                >= 50 => 2.0m,    // Слаб
+                _ => 2.0m         // Слаб (по подразбиране)
             };
         }
 
@@ -138,8 +138,8 @@ namespace CodeGrade.Services
 
             var totalAssignments = grades.Count;
             var completedAssignments = grades.Count; // Всички оценки представляват завършени задачи
-            var averageGrade = grades.Any() ? grades.Average(g => g.GradeValue ?? 0) : 0;
-            var bestGrade = grades.Any() ? grades.Max(g => g.GradeValue ?? 0) : 0;
+            var averageGrade = grades.Any() ? (double)grades.Average(g => g.GradeValue ?? 0m) : 0;
+            var bestGrade = grades.Any() ? (double)grades.Max(g => g.GradeValue ?? 0m) : 0;
 
             return new Dictionary<string, double>
             {
