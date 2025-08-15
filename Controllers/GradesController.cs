@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using CodeGrade.Models;
 using CodeGrade.Data;
 using CodeGrade.Services;
+using CodeGrade.ViewModels;
 
 namespace CodeGrade.Controllers;
 
@@ -101,9 +102,6 @@ public class GradesController : Controller
 
         ViewBag.Submission = submission;
 
-        if (grade == null)
-            return NotFound();
-
         return View("GradeDetails", grade);
     }
 
@@ -136,17 +134,20 @@ public class GradesController : Controller
 
         ViewBag.Submission = submission;
 
-        if (grade == null)
-            return NotFound();
-
         return View("GradeEdit", grade);
     }
 
     [HttpPost]
     [Authorize(Roles = "Teacher")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Points,GradeValue,Comments")] Grade gradeUpdate)
+    public async Task<IActionResult> Edit(int id, GradeEditViewModel model)
     {
+        // Проверка дали ID-то съвпада
+        if (id != model.Id)
+        {
+            return NotFound();
+        }
+
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var teacher = await _context.Teachers
             .FirstOrDefaultAsync(t => t.UserId == userId);
@@ -165,13 +166,15 @@ public class GradesController : Controller
         {
             try
             {
-                _logger.LogInformation("Updating grade: Id={Id}, Points={Points}, GradeValue={GradeValue}", 
-                    existingGrade.Id, gradeUpdate.Points, gradeUpdate.GradeValue);
+                _logger.LogInformation("Updating grade: Id={Id}, Points={Points}, GradeValue={GradeValue}",
+                    existingGrade.Id, model.Points, model.GradeValue);
 
-                existingGrade.Points = gradeUpdate.Points;
-                existingGrade.GradeValue = gradeUpdate.GradeValue;
-                existingGrade.Comments = gradeUpdate.Comments;
+                // Обновяваме само полетата, които могат да се редактират
+                existingGrade.Points = model.Points;
+                existingGrade.GradeValue = model.GradeValue;
+                existingGrade.Comments = model.Comments;
                 existingGrade.GradedAt = DateTime.UtcNow;
+                existingGrade.GradedBy = teacher.Id.ToString();
 
                 _context.Update(existingGrade);
                 await _context.SaveChangesAsync();
@@ -192,19 +195,22 @@ public class GradesController : Controller
                     throw;
                 }
             }
-        }
-        else
-        {
-            // Log за дебъгване
-            _logger.LogWarning("Edit Grade - ModelState.IsValid: {IsValid}", ModelState.IsValid);
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            catch (Exception ex)
             {
-                _logger.LogWarning("ModelState Error: {Error}", error.ErrorMessage);
+                _logger.LogError(ex, "Error updating grade");
+                ModelState.AddModelError("", "Възникна грешка при обновяването на оценката.");
             }
         }
 
+        // Log за дебъгване
+        _logger.LogWarning("Edit Grade - ModelState.IsValid: {IsValid}", ModelState.IsValid);
+        foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+        {
+            _logger.LogWarning("ModelState Error: {Error}", error.ErrorMessage);
+        }
+
         // Ако има грешки, зареждаме данните отново за изгледа
-        var grade = await _context.Grades
+        var gradeForView = await _context.Grades
             .Include(g => g.Student)
                 .ThenInclude(st => st.User)
             .Include(g => g.Student)
@@ -212,18 +218,18 @@ public class GradesController : Controller
             .Include(g => g.Assignment)
             .FirstOrDefaultAsync(g => g.Id == id);
 
-        if (grade != null)
+        if (gradeForView != null)
         {
             // Зареждаме submission отделно
             var submission = await _context.Submissions
                 .Include(s => s.ExecutionResults)
                     .ThenInclude(er => er.TestCase)
-                .FirstOrDefaultAsync(s => s.StudentId == grade.StudentId && s.AssignmentId == grade.AssignmentId);
+                .FirstOrDefaultAsync(s => s.StudentId == gradeForView.StudentId && s.AssignmentId == gradeForView.AssignmentId);
 
             ViewBag.Submission = submission;
         }
 
-        return View("GradeEdit", grade);
+        return View("GradeEdit", gradeForView);
     }
 
     [Authorize(Roles = "Teacher")]
@@ -269,7 +275,7 @@ public class GradesController : Controller
     [HttpPost]
     [Authorize(Roles = "Teacher")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(int id, [Bind("StudentId,AssignmentId,Points,GradeValue,Comments")] Grade grade)
+    public async Task<IActionResult> Create(int id, GradeCreateViewModel model)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var teacher = await _context.Teachers
@@ -299,13 +305,17 @@ public class GradesController : Controller
             return RedirectToAction(nameof(Details), new { id = existingGrade.Id });
         }
 
+        // Задаваме StudentId и AssignmentId от submission-а
+        model.StudentId = submission.StudentId;
+        model.AssignmentId = submission.AssignmentId;
+
         // Log за дебъгване
         _logger.LogInformation("Create Grade - ModelState.IsValid: {IsValid}", ModelState.IsValid);
         if (!ModelState.IsValid)
         {
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            foreach (var modelError in ModelState.Values.SelectMany(v => v.Errors))
             {
-                _logger.LogWarning("ModelState Error: {Error}", error.ErrorMessage);
+                _logger.LogWarning("ModelState Error: {Error}", modelError.ErrorMessage);
             }
         }
 
@@ -313,10 +323,18 @@ public class GradesController : Controller
         {
             try
             {
-                grade.GradedAt = DateTime.UtcNow;
-                grade.GradedBy = teacher.Id.ToString();
+                var grade = new Grade
+                {
+                    StudentId = model.StudentId,
+                    AssignmentId = model.AssignmentId,
+                    Points = model.Points,
+                    GradeValue = model.GradeValue,
+                    Comments = model.Comments,
+                    GradedAt = DateTime.UtcNow,
+                    GradedBy = teacher.Id.ToString()
+                };
 
-                _logger.LogInformation("Creating grade: StudentId={StudentId}, AssignmentId={AssignmentId}, Points={Points}, GradeValue={GradeValue}", 
+                _logger.LogInformation("Creating grade: StudentId={StudentId}, AssignmentId={AssignmentId}, Points={Points}, GradeValue={GradeValue}",
                     grade.StudentId, grade.AssignmentId, grade.Points, grade.GradeValue);
 
                 _context.Add(grade);
@@ -353,4 +371,4 @@ public class GradesController : Controller
     {
         return _context.Grades.Any(e => e.Id == id);
     }
-} 
+}
