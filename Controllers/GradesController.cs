@@ -165,6 +165,9 @@ public class GradesController : Controller
         {
             try
             {
+                _logger.LogInformation("Updating grade: Id={Id}, Points={Points}, GradeValue={GradeValue}", 
+                    existingGrade.Id, gradeUpdate.Points, gradeUpdate.GradeValue);
+
                 existingGrade.Points = gradeUpdate.Points;
                 existingGrade.GradeValue = gradeUpdate.GradeValue;
                 existingGrade.Comments = gradeUpdate.Comments;
@@ -173,8 +176,10 @@ public class GradesController : Controller
                 _context.Update(existingGrade);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Grade updated successfully");
+
                 TempData["SuccessMessage"] = "Оценката беше успешно обновена.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = existingGrade.Id });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -186,6 +191,15 @@ public class GradesController : Controller
                 {
                     throw;
                 }
+            }
+        }
+        else
+        {
+            // Log за дебъгване
+            _logger.LogWarning("Edit Grade - ModelState.IsValid: {IsValid}", ModelState.IsValid);
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                _logger.LogWarning("ModelState Error: {Error}", error.ErrorMessage);
             }
         }
 
@@ -245,8 +259,8 @@ public class GradesController : Controller
 
         if (existingGrade != null)
         {
-            // Ако вече има оценка, пренасочваме към редактирането
-            return RedirectToAction(nameof(Edit), new { id = existingGrade.Id });
+            // Ако вече има оценка, пренасочваме към детайлите на оценката
+            return RedirectToAction(nameof(Details), new { id = existingGrade.Id });
         }
 
         return View(submission);
@@ -281,8 +295,18 @@ public class GradesController : Controller
 
         if (existingGrade != null)
         {
-            // Ако вече има оценка, пренасочваме към редактирането
-            return RedirectToAction(nameof(Edit), new { id = existingGrade.Id });
+            // Ако вече има оценка, пренасочваме към детайлите на оценката
+            return RedirectToAction(nameof(Details), new { id = existingGrade.Id });
+        }
+
+        // Log за дебъгване
+        _logger.LogInformation("Create Grade - ModelState.IsValid: {IsValid}", ModelState.IsValid);
+        if (!ModelState.IsValid)
+        {
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                _logger.LogWarning("ModelState Error: {Error}", error.ErrorMessage);
+            }
         }
 
         if (ModelState.IsValid)
@@ -292,11 +316,17 @@ public class GradesController : Controller
                 grade.GradedAt = DateTime.UtcNow;
                 grade.GradedBy = teacher.Id.ToString();
 
+                _logger.LogInformation("Creating grade: StudentId={StudentId}, AssignmentId={AssignmentId}, Points={Points}, GradeValue={GradeValue}", 
+                    grade.StudentId, grade.AssignmentId, grade.Points, grade.GradeValue);
+
                 _context.Add(grade);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Grade created successfully with ID: {GradeId}", grade.Id);
+
                 TempData["SuccessMessage"] = "Оценката беше успешно създадена.";
-                return RedirectToAction(nameof(Index));
+                // Пренасочваме към детайлите на новосъздадената оценка
+                return RedirectToAction(nameof(Details), new { id = grade.Id });
             }
             catch (Exception ex)
             {

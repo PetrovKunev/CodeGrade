@@ -101,6 +101,11 @@ namespace CodeGrade.Data
                 .HasForeignKey(g => g.AssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure GradeValue precision for decimal type
+            builder.Entity<Grade>()
+                .Property(g => g.GradeValue)
+                .HasPrecision(3, 1); // 3 total digits, 1 decimal place (e.g., 6.0)
+
             // Configure indexes
             builder.Entity<Student>()
                 .HasIndex(s => s.StudentNumber)
