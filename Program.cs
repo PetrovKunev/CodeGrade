@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using CodeGrade.Data;
 using CodeGrade.Models;
 using CodeGrade.Services;
+using CodeGrade.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,10 +24,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 8;
     
     options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = false; // For development
+    options.SignIn.RequireConfirmedEmail = true; // ✅ Изисква потвърждение на имейл
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
+
+// Configure Email Settings
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+// Add Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Configure Identity options
 builder.Services.ConfigureApplicationCookie(options =>

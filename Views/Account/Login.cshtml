@@ -42,6 +42,12 @@
                         Запомни ме
                     </label>
                 </div>
+                <div class="text-sm">
+                    <a asp-action="ResendConfirmationEmail" asp-route-email="@Model?.Email" 
+                       class="font-medium text-indigo-600 hover:text-indigo-500">
+                        Повторно изпращане на потвърждение
+                    </a>
+                </div>
             </div>
 
             <div>
