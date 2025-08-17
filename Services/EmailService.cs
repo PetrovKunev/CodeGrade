@@ -16,9 +16,9 @@ namespace CodeGrade.Services
             _logger = logger;
         }
         
-        public async Task<bool> IsEmailServiceConfiguredAsync()
+        public Task<bool> IsEmailServiceConfiguredAsync()
         {
-            return _emailSettings.IsConfigured;
+            return Task.FromResult(_emailSettings.IsConfigured);
         }
         
         public async Task SendEmailConfirmationAsync(string email, string confirmationLink)
@@ -56,7 +56,22 @@ namespace CodeGrade.Services
                     </div>
                 </div>";
             
-            await SendEmailAsync(email, subject, body);
+            try
+            {
+                await SendEmailAsync(email, subject, body);
+            }
+            catch (Exception)
+            {
+                // Временно решение - показваме линка в конзолата за development
+                _logger.LogWarning("Email sending failed, showing confirmation link in console for development: {Link}", confirmationLink);
+                Console.WriteLine($"\n=== EMAIL CONFIRMATION LINK (DEVELOPMENT) ===");
+                Console.WriteLine($"Email: {email}");
+                Console.WriteLine($"Confirmation Link: {confirmationLink}");
+                Console.WriteLine($"=============================================\n");
+                
+                // Прехвърляме грешката нагоре
+                throw;
+            }
         }
         
         public async Task SendPasswordResetAsync(string email, string resetLink)
@@ -140,32 +155,64 @@ namespace CodeGrade.Services
                 return;
             }
             
-            try
+            _logger.LogInformation("Attempting to send email to {Email} via {Server}:{Port}", 
+                to, _emailSettings.SmtpServer, _emailSettings.SmtpPort);
+            
+            Exception? lastException = null;
+            
+            // Опитваме с различни портове и настройки
+            var configurations = new[]
             {
-                using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
-                {
-                    EnableSsl = _emailSettings.EnableSsl,
-                    Credentials = new NetworkCredential(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword),
-                    DeliveryMethod = SmtpDeliveryMethod.Network
-                };
-                
-                var message = new MailMessage
-                {
-                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true
-                };
-                message.To.Add(to);
-                
-                await client.SendMailAsync(message);
-                _logger.LogInformation("Email sent successfully to {Email} with subject: {Subject}", to, subject);
-            }
-            catch (Exception ex)
+                new { Port = _emailSettings.SmtpPort, EnableSsl = _emailSettings.EnableSsl, Description = "Primary configuration" },
+                new { Port = 587, EnableSsl = true, Description = "Fallback to port 587 with SSL" },
+                new { Port = 25, EnableSsl = false, Description = "Fallback to port 25 without SSL" }
+            };
+            
+            foreach (var config in configurations)
             {
-                _logger.LogError(ex, "Failed to send email to {Email} with subject: {Subject}", to, subject);
-                throw new InvalidOperationException($"Failed to send email to {to}", ex);
+                try
+                {
+                    _logger.LogInformation("Trying {Description}: Port {Port}, SSL: {EnableSsl}", 
+                        config.Description, config.Port, config.EnableSsl);
+                    
+                    using var client = new SmtpClient();
+                    client.Host = _emailSettings.SmtpServer;
+                    client.Port = config.Port;
+                    client.EnableSsl = config.EnableSsl;
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
+                    client.Timeout = 10000; // 10 секунди timeout
+                    
+                    var message = new MailMessage
+                    {
+                        From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                        Subject = subject,
+                        Body = body,
+                        IsBodyHtml = true
+                    };
+                    message.To.Add(to);
+                    
+                    _logger.LogInformation("Sending email message via {Port}...", config.Port);
+                    await client.SendMailAsync(message);
+                    _logger.LogInformation("Email sent successfully to {Email} via {Port}", to, config.Port);
+                    return; // Успех - излизаме от цикъла
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    _logger.LogWarning("Failed to send email via {Port}: {Error}", config.Port, ex.Message);
+                    
+                    // Ако е последният опит, логваме грешката
+                    if (config == configurations.Last())
+                    {
+                        _logger.LogError(ex, "All email configurations failed for {Email}. Server: {Server}, Username: {Username}", 
+                            to, _emailSettings.SmtpServer, _emailSettings.SmtpUsername);
+                    }
+                }
             }
+            
+            // Ако всички опити са неуспешни
+            throw new InvalidOperationException($"Failed to send email to {to} after trying all configurations", lastException);
         }
     }
 }

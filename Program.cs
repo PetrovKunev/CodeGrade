@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using CodeGrade.Data;
 using CodeGrade.Models;
 using CodeGrade.Services;
-using CodeGrade.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -14,17 +14,20 @@ namespace CodeGrade.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ApplicationDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _emailService = emailService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -187,7 +190,10 @@ namespace CodeGrade.Controllers
                     try
                     {
                         // Изпращане на email за потвърждение
-                        await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                        if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(confirmationLink))
+                        {
+                            await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                        }
                         
                         TempData["InfoMessage"] = "📧 Регистрацията е успешна! Моля, проверете вашия имейл за потвърждение на акаунта.";
                         return RedirectToAction("Login");
@@ -200,14 +206,6 @@ namespace CodeGrade.Controllers
                         
                         TempData["WarningMessage"] = "⚠️ Регистрацията е успешна, но не можахме да изпратим email за потвърждение. Моля, свържете се с администратор.";
                         return RedirectToAction("Login");
-                    }
-                    if (model.Role == "Teacher")
-                    {
-                        return RedirectToAction("TeacherDashboard", "Home");
-                    }
-                    else
-                    {
-                        return RedirectToAction("StudentDashboard", "Home");
                     }
                 }
                 
@@ -254,7 +252,10 @@ namespace CodeGrade.Controllers
                 // Изпращане на поздравителен имейл
                 try
                 {
-                    await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName);
+                    if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(user.FirstName))
+                    {
+                        await _emailService.SendWelcomeEmailAsync(user.Email, user.FirstName);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -299,7 +300,10 @@ namespace CodeGrade.Controllers
             
             try
             {
-                await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                if (!string.IsNullOrEmpty(user.Email) && !string.IsNullOrEmpty(confirmationLink))
+                {
+                    await _emailService.SendEmailConfirmationAsync(user.Email, confirmationLink);
+                }
                 TempData["SuccessMessage"] = "📧 Email за потвърждение е изпратен отново.";
             }
             catch (Exception ex)
