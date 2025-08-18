@@ -15,7 +15,7 @@ namespace CodeGrade.Services
             _logger = logger;
         }
 
-        public async Task<Grade> CalculateGradeAsync(int submissionId)
+        public async Task<Grade?> CalculateGradeAsync(int submissionId)
         {
             var submission = await _context.Submissions
                 .Include(s => s.Assignment)

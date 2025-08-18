@@ -1,0 +1,65 @@
+@model CodeGrade.ViewModels.AdminModuleEditViewModel
+@{
+    ViewData["Title"] = "Редактиране на модул";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Редактиране на модул</h1>
+        <a asp-action="Modules" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад към списъка
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Информация за модула</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="EditModule" method="post">
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Име на модула *</label>
+                            <input asp-for="Name" class="form-control" placeholder="Например: Програмиране, Математика" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Semester" class="form-label">Семестър *</label>
+                            <select asp-for="Semester" class="form-select">
+                                <option value="">Избери семестър</option>
+                                @for (int semester = 1; semester <= 8; semester++)
+                                {
+                                    <option value="@semester" selected="@(semester == Model.Semester)">@semester</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Semester" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Описание</label>
+                    <textarea asp-for="Description" class="form-control" rows="4" 
+                              placeholder="Подробно описание на модула, целите и съдържанието (по желание)"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a asp-action="Modules" class="btn btn-secondary me-2">Отказ</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Запази промените
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

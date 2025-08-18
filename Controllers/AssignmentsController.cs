@@ -630,6 +630,16 @@ public class AssignmentsController : Controller
                 
                 await _gradeCalculationService.UpdateSubmissionScoreAsync(submission.Id);
                 var grade = await _gradeCalculationService.CalculateGradeAsync(submission.Id);
+                if (grade == null)
+                {
+                    _logger.LogWarning("Grade could not be calculated for submission {SubmissionId}", submission.Id);
+                    TempData["ErrorMessage"] = "Оценката не можа да бъде изчислена, тъй като няма завършени изпълнения.";
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = TempData["ErrorMessage"] });
+                    }
+                    return RedirectToAction("Submit", new { id = assignmentId });
+                }
 
                 _logger.LogInformation("Grade calculated for submission {SubmissionId}: {Points} points (Grade: {GradeValue})", 
                     submission.Id, grade.Points, grade.GradeValue);

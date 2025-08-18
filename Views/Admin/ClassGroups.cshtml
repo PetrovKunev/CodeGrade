@@ -1,0 +1,190 @@
+@model List<CodeGrade.ViewModels.AdminClassGroupViewModel>
+@{
+    ViewData["Title"] = "Управление на класове";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Управление на класове</h1>
+        <a asp-action="CreateClassGroup" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Нов клас
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Списък на класовете</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="classGroupsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Име на класа</th>
+                            <th>Описание</th>
+                            <th>Година</th>
+                            <th>Брой студенти</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var classGroup in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <div class="avatar-title bg-success rounded-circle">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">@classGroup.Name</h6>
+                                            @if (!string.IsNullOrEmpty(classGroup.Description))
+                                            {
+                                                <small class="text-muted">@classGroup.Description</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(classGroup.Description))
+                                    {
+                                        <span class="text-muted">@classGroup.Description</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@classGroup.Year</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@classGroup.StudentCount</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="EditClassGroup" asp-route-id="@classGroup.Id" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                onclick="viewStudents(@classGroup.Id, '@classGroup.Name')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="deleteClassGroup(@classGroup.Id, '@classGroup.Name')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Потвърждение за изтриване</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Сигурни ли сте, че искате да изтриете класа <strong id="classNameToDelete"></strong>?</p>
+                <p class="text-danger">Това действие не може да бъде отменено!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Изтрий</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Students View Modal -->
+<div class="modal fade" id="studentsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Студенти в класа: <span id="classNameInModal"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="studentsList">
+                    <!-- Students will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Затвори</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#classGroupsTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/bg.json'
+                },
+                order: [[2, 'desc'], [0, 'asc']],
+                pageLength: 25,
+                responsive: true
+            });
+        });
+
+        function deleteClassGroup(classGroupId, className) {
+            document.getElementById('classNameToDelete').textContent = className;
+            document.getElementById('deleteForm').action = '@Url.Action("DeleteClassGroup")/' + classGroupId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        function viewStudents(classGroupId, className) {
+            document.getElementById('classNameInModal').textContent = className;
+            
+            // Load students for this class group
+            $.get('@Url.Action("GetStudentsForClassGroup")/' + classGroupId, function(data) {
+                var studentsHtml = '';
+                if (data && data.length > 0) {
+                    studentsHtml = '<div class="table-responsive"><table class="table table-sm">';
+                    studentsHtml += '<thead><tr><th>Име</th><th>Имейл</th></tr></thead><tbody>';
+                    data.forEach(function(student) {
+                        studentsHtml += '<tr><td>' + student.fullName + '</td><td>' + student.email + '</td></tr>';
+                    });
+                    studentsHtml += '</tbody></table></div>';
+                } else {
+                    studentsHtml = '<p class="text-muted">Няма студенти в този клас.</p>';
+                }
+                document.getElementById('studentsList').innerHTML = studentsHtml;
+            });
+            
+            new bootstrap.Modal(document.getElementById('studentsModal')).show();
+        }
+    </script>
+}

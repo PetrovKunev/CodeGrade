@@ -21,8 +21,8 @@
                     <div class="text-sm text-gray-600">Краен срок:</div>
                     @if (Model.Assignment != null)
                     {
-                        <div class="font-medium @(Model.Assignment.DueDate > DateTime.UtcNow ? "text-green-600" : "text-red-600")">
-                            @Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm")
+                        <div class="font-medium @(((Model.Assignment?.DueDate ?? DateTime.MinValue) > DateTime.UtcNow ? "text-green-600" : "text-red-600"))">
+                            @(Model.Assignment != null ? Model.Assignment.DueDate.ToString("dd.MM.yyyy HH:mm") : "-")
                         </div>
                     }
                     <div class="text-xs text-gray-500">@Model.TimeRemaining</div>
@@ -130,15 +130,15 @@
                             <h3 class="text-lg font-medium text-gray-900">Подай решение</h3>
                             @if (Model.Assignment != null)
                             {
-                                <a asp-action="Submit" asp-route-id="@Model.Assignment.Id" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
+                                <a asp-action="Submit" asp-route-id="@(Model.Assignment?.Id ?? 0)" target="_blank" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">
                                     <i class="fas fa-external-link-alt mr-2"></i>Отвори в нов прозорец
                                 </a>
                             }
                         </div>
                         @if (Model.Assignment != null)
                         {
-                            <form asp-action="Submit" asp-route-id="@Model.Assignment.Id" method="post" class="space-y-4" id="submission-form">
-                            <input name="AssignmentId" value="@Model.Assignment.Id" type="hidden" />
+                            <form asp-action="Submit" asp-route-id="@(Model.Assignment?.Id ?? 0)" method="post" class="space-y-4" id="submission-form">
+                            <input name="AssignmentId" value="@(Model.Assignment?.Id ?? 0)" type="hidden" />
                             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
 
                             <div>
@@ -396,7 +396,7 @@
                             code: this.value,
                             language: document.getElementById('language-select').value
                         };
-                        localStorage.setItem('draft-assignment-@Model.Assignment.Id', JSON.stringify(formData));
+                        localStorage.setItem('draft-assignment-@(Model.Assignment?.Id ?? 0)', JSON.stringify(formData));
                     }, 2000);
                 });
                 
