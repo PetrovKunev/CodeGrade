@@ -44,6 +44,16 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
+// Configure URL generation for production
+if (builder.Environment.IsProduction())
+{
+    builder.Services.Configure<RouteOptions>(options =>
+    {
+        options.LowercaseUrls = true;
+        options.LowercaseQueryStrings = true;
+    });
+}
+
 // Add custom services
 builder.Services.AddScoped<ICodeExecutorService, Judge0CodeExecutorService>();
 builder.Services.AddScoped<GradeCalculationService>();

@@ -90,6 +90,15 @@
                         <span asp-validation-for="ClassNumber" class="text-red-500 text-sm"></span>
                     </div>
                 </div>
+
+                <div id="teacherCodeGroup" style="display:@((Model.Role == "Teacher") ? "block" : "none")">
+                    <div>
+                        <label asp-for="TeacherCode" class="sr-only">Код за преподавател</label>
+                        <input asp-for="TeacherCode" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Въведете кода за преподавател" />
+                        <span asp-validation-for="TeacherCode" class="text-red-500 text-sm"></span>
+                        <small class="text-gray-500 text-xs block mt-1">Кодът за преподавател се получава от администратор</small>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -110,15 +119,23 @@
     <script>
         const roleSelect = document.getElementById('roleSelect');
         const studentFields = document.getElementById('studentFields');
-        function toggleStudentFields() {
+        const teacherCodeGroup = document.getElementById('teacherCodeGroup');
+        
+        function toggleFields() {
             if (roleSelect.value === 'Student') {
                 studentFields.style.display = 'block';
+                teacherCodeGroup.style.display = 'none';
+            } else if (roleSelect.value === 'Teacher') {
+                studentFields.style.display = 'none';
+                teacherCodeGroup.style.display = 'block';
             } else {
                 studentFields.style.display = 'none';
+                teacherCodeGroup.style.display = 'none';
             }
         }
-        roleSelect.addEventListener('change', toggleStudentFields);
-        toggleStudentFields();
+        
+        roleSelect.addEventListener('change', toggleFields);
+        toggleFields();
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 } 

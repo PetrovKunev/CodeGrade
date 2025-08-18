@@ -132,6 +132,25 @@ namespace CodeGrade.Controllers
                 }
             }
 
+            // Валидираме кода за преподавател ако е избрана ролята Teacher
+            if (model.Role == "Teacher")
+            {
+                if (string.IsNullOrWhiteSpace(model.TeacherCode))
+                {
+                    ModelState.AddModelError("TeacherCode", "Кодът за преподавател е задължителен.");
+                    return View(model);
+                }
+
+                var teacherCode = await _context.TeacherRegistrationCodes
+                    .FirstOrDefaultAsync(c => c.Code == model.TeacherCode && c.IsActive);
+
+                if (teacherCode == null)
+                {
+                    ModelState.AddModelError("TeacherCode", "Невалиден или изтекъл код за преподавател.");
+                    return View(model);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 System.Diagnostics.Debug.WriteLine("ModelState is valid, proceeding with user creation");
@@ -178,6 +197,16 @@ namespace CodeGrade.Controllers
                         };
                         
                         _context.Teachers.Add(teacher);
+
+                        // Маркираме кода като използван
+                        var teacherCode = await _context.TeacherRegistrationCodes
+                            .FirstOrDefaultAsync(c => c.Code == model.TeacherCode);
+                        if (teacherCode != null)
+                        {
+                            teacherCode.IsUsed = true;
+                            teacherCode.UsedByUserId = user.Id;
+                            teacherCode.UsedAt = DateTime.UtcNow;
+                        }
                     }
                     
                     await _context.SaveChangesAsync();

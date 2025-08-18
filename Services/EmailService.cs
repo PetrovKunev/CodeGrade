@@ -127,7 +127,7 @@ namespace CodeGrade.Services
                             Сега можете да влезете в системата и да започнете да използвате CodeGrade.
                         </p>
                         <div style='text-align: center; margin: 30px 0;'>
-                            <a href='https://your-domain.com/Account/Login' 
+                            <a href='https://codegrade.kunev.dev/Account/Login' 
                                style='background-color: #059669; color: white; padding: 12px 24px; 
                                       text-decoration: none; border-radius: 6px; display: inline-block; 
                                       font-weight: bold;'>

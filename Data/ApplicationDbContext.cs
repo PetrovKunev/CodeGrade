@@ -23,6 +23,7 @@ namespace CodeGrade.Data
         public DbSet<GradeResult> GradeResults { get; set; }
         public DbSet<QualityMetrics> QualityMetrics { get; set; }
         public DbSet<AssessmentCriteria> AssessmentCriteria { get; set; }
+        public DbSet<TeacherRegistrationCode> TeacherRegistrationCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

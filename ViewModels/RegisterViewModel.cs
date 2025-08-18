@@ -46,6 +46,10 @@ namespace CodeGrade.ViewModels
         [Display(Name = "Номер в клас")]
         public int? ClassNumber { get; set; }
 
+        [Display(Name = "Код за преподавател")]
+        [StringLength(20, ErrorMessage = "Кодът не може да бъде по-дълъг от 20 символа")]
+        public string? TeacherCode { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (Role == "Student")
@@ -64,6 +68,20 @@ namespace CodeGrade.ViewModels
                 {
                     yield return new ValidationResult("Групата е задължителна за студенти", new[] { nameof(SubGroup) });
                 }
+            }
+
+            if (Role == "Teacher" && string.IsNullOrWhiteSpace(TeacherCode))
+            {
+                yield return new ValidationResult(
+                    "Кодът за преподавател е задължителен за регистрация като преподавател",
+                    new[] { nameof(TeacherCode) });
+            }
+
+            if (Role != "Teacher" && !string.IsNullOrWhiteSpace(TeacherCode))
+            {
+                yield return new ValidationResult(
+                    "Кодът за преподавател се използва само за регистрация като преподавател",
+                    new[] { nameof(TeacherCode) });
             }
         }
     }
