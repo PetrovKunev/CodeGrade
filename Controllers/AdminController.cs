@@ -298,6 +298,16 @@ namespace CodeGrade.Controllers
                 var user = await _userManager.FindByIdAsync(id);
                 if (user != null)
                 {
+                    // Проверяваме зависимостите преди изтриване
+                    var dependencies = await CheckUserDependenciesAsync(id);
+                    
+                    if (dependencies.HasDependencies)
+                    {
+                        // Ако има зависимости, показваме информация за тях
+                        TempData["WarningMessage"] = $"Потребителят не може да бъде изтрит, тъй като има прикачени данни. {dependencies.GetDependenciesSummary()}";
+                        return RedirectToAction(nameof(Users));
+                    }
+
                     var result = await _userManager.DeleteAsync(user);
                     if (result.Succeeded)
                     {
@@ -319,6 +329,273 @@ namespace CodeGrade.Controllers
             }
 
             return RedirectToAction(nameof(Users));
+        }
+
+        private async Task<UserDependenciesInfo> CheckUserDependenciesAsync(string userId)
+        {
+            var dependencies = new UserDependenciesInfo();
+
+            // Проверяваме дали потребителят е студент
+            var student = await _context.Students
+                .Include(s => s.Grades)
+                .Include(s => s.Submissions)
+                    .ThenInclude(sub => sub.ExecutionResults)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (student != null)
+            {
+                dependencies.IsStudent = true;
+                dependencies.GradesCount = student.Grades.Count;
+                dependencies.SubmissionsCount = student.Submissions.Count;
+                dependencies.ExecutionResultsCount = student.Submissions.Sum(s => s.ExecutionResults.Count);
+            }
+
+            // Проверяваме дали потребителят е учител
+            var teacher = await _context.Teachers
+                .Include(t => t.Assignments)
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+
+            if (teacher != null)
+            {
+                dependencies.IsTeacher = true;
+                dependencies.AssignmentsCount = teacher.Assignments.Count;
+            }
+
+            return dependencies;
+        }
+
+
+
+        public async Task<IActionResult> UserDependencies(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var dependencies = await CheckUserDependenciesAsync(id);
+            var viewModel = new UserDependenciesViewModel
+            {
+                UserId = id,
+                UserName = $"{user.FirstName} {user.LastName}",
+                UserEmail = user.Email ?? string.Empty,
+                Dependencies = dependencies
+            };
+
+            if (dependencies.IsStudent)
+            {
+                var student = await _context.Students
+                    .Include(s => s.Grades)
+                        .ThenInclude(g => g.Assignment)
+                    .Include(s => s.Submissions)
+                        .ThenInclude(sub => sub.Assignment)
+                    .Include(s => s.Submissions)
+                        .ThenInclude(sub => sub.ExecutionResults)
+                    .FirstOrDefaultAsync(s => s.UserId == id);
+
+                if (student != null)
+                {
+                    viewModel.Grades = student.Grades.Select(g => new GradeInfo
+                    {
+                        Id = g.Id,
+                        AssignmentName = g.Assignment.Title,
+                        Points = g.Points,
+                        GradeValue = g.GradeValue,
+                        GradedAt = g.GradedAt
+                    }).ToList();
+
+                    viewModel.Submissions = student.Submissions.Select(s => new SubmissionInfo
+                    {
+                        Id = s.Id,
+                        AssignmentName = s.Assignment.Title,
+                        Status = s.Status.ToString(),
+                        Score = s.Score,
+                        SubmittedAt = s.SubmittedAt,
+                        ExecutionResultsCount = s.ExecutionResults.Count
+                    }).ToList();
+                }
+            }
+
+            if (dependencies.IsTeacher)
+            {
+                var teacher = await _context.Teachers
+                    .Include(t => t.Assignments)
+                        .ThenInclude(a => a.SubjectModule)
+                    .FirstOrDefaultAsync(t => t.UserId == id);
+
+                if (teacher != null)
+                {
+                    viewModel.Assignments = teacher.Assignments.Select(a => new AssignmentInfo
+                    {
+                        Id = a.Id,
+                        Title = a.Title,
+                        SubjectModuleName = a.SubjectModule.Name,
+                        CreatedAt = a.CreatedAt,
+                        DueDate = a.DueDate
+                    }).ToList();
+                }
+            }
+
+            return View(viewModel);
+        }
+
+        // Actions за изтриване на зависимости
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUserGrades(string userId)
+        {
+            try
+            {
+                var student = await _context.Students
+                    .Include(s => s.Grades)
+                    .FirstOrDefaultAsync(s => s.UserId == userId);
+
+                if (student != null && student.Grades.Any())
+                {
+                    _context.Grades.RemoveRange(student.Grades);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Deleted {GradeCount} grades for user {UserId} by admin {AdminId}", 
+                        student.Grades.Count, userId, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = $"Успешно изтрити {student.Grades.Count} оценки.";
+                }
+                else
+                {
+                    TempData["InfoMessage"] = "Няма оценки за изтриване.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting grades for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Грешка при изтриване на оценките.";
+            }
+
+            return RedirectToAction(nameof(UserDependencies), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUserSubmissions(string userId)
+        {
+            try
+            {
+                var student = await _context.Students
+                    .Include(s => s.Submissions)
+                        .ThenInclude(sub => sub.ExecutionResults)
+                    .FirstOrDefaultAsync(s => s.UserId == userId);
+
+                if (student != null && student.Submissions.Any())
+                {
+                    // Първо изтриваме ExecutionResults
+                    var executionResults = student.Submissions.SelectMany(s => s.ExecutionResults).ToList();
+                    _context.ExecutionResults.RemoveRange(executionResults);
+
+                    // След това изтриваме Submissions
+                    _context.Submissions.RemoveRange(student.Submissions);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Deleted {SubmissionCount} submissions and {ExecutionResultCount} execution results for user {UserId} by admin {AdminId}", 
+                        student.Submissions.Count, executionResults.Count, userId, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = $"Успешно изтрити {student.Submissions.Count} решения и {executionResults.Count} резултати от изпълнение.";
+                }
+                else
+                {
+                    TempData["InfoMessage"] = "Няма решения за изтриване.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting submissions for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Грешка при изтриване на решенията.";
+            }
+
+            return RedirectToAction(nameof(UserDependencies), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUserAssignments(string userId)
+        {
+            try
+            {
+                var teacher = await _context.Teachers
+                    .Include(t => t.Assignments)
+                        .ThenInclude(a => a.TestCases)
+                    .Include(t => t.Assignments)
+                        .ThenInclude(a => a.Submissions)
+                    .FirstOrDefaultAsync(t => t.UserId == userId);
+
+                if (teacher != null && teacher.Assignments.Any())
+                {
+                    var assignments = teacher.Assignments.ToList();
+                    var testCases = assignments.SelectMany(a => a.TestCases).ToList();
+                    var submissions = assignments.SelectMany(a => a.Submissions).ToList();
+
+                    // Първо изтриваме свързаните данни
+                    if (submissions.Any())
+                    {
+                        var executionResults = await _context.ExecutionResults
+                            .Where(er => submissions.Select(s => s.Id).Contains(er.SubmissionId))
+                            .ToListAsync();
+                        _context.ExecutionResults.RemoveRange(executionResults);
+                    }
+
+                    _context.Submissions.RemoveRange(submissions);
+                    _context.TestCases.RemoveRange(testCases);
+                    _context.Assignments.RemoveRange(assignments);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Deleted {AssignmentCount} assignments, {TestCaseCount} test cases, and {SubmissionCount} submissions for teacher {UserId} by admin {AdminId}", 
+                        assignments.Count, testCases.Count, submissions.Count, userId, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = $"Успешно изтрити {assignments.Count} задачи, {testCases.Count} тестови случаи и {submissions.Count} решения.";
+                }
+                else
+                {
+                    TempData["InfoMessage"] = "Няма задачи за изтриване.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting assignments for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Грешка при изтриване на задачите.";
+            }
+
+            return RedirectToAction(nameof(UserDependencies), new { id = userId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAllUserDependencies(string userId)
+        {
+            try
+            {
+                // Изтриваме всички зависимости наведнъж
+                await DeleteUserGrades(userId);
+                await DeleteUserSubmissions(userId);
+                await DeleteUserAssignments(userId);
+
+                // Проверяваме дали вече няма зависимости
+                var dependencies = await CheckUserDependenciesAsync(userId);
+                if (!dependencies.HasDependencies)
+                {
+                    TempData["SuccessMessage"] = "Всички зависимости са изтрити успешно. Сега можете да изтриете потребителя.";
+                }
+                else
+                {
+                    TempData["WarningMessage"] = "Някои зависимости все още съществуват.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting all dependencies for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Грешка при изтриване на всички зависимости.";
+            }
+
+            return RedirectToAction(nameof(UserDependencies), new { id = userId });
         }
         #endregion
 
@@ -656,6 +933,100 @@ namespace CodeGrade.Controllers
                 .ToListAsync();
 
             return Json(assignments);
+        }
+
+        // Actions за проверка на зависимостите на класове и модули
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteClassGroupWithDependencies(int id)
+        {
+            try
+            {
+                var classGroup = await _context.ClassGroups
+                    .Include(cg => cg.Students)
+                    .FirstOrDefaultAsync(cg => cg.Id == id);
+
+                if (classGroup == null)
+                {
+                    return NotFound();
+                }
+
+                if (classGroup.Students.Any())
+                {
+                    // Премахваме връзката между студентите и класа
+                    foreach (var student in classGroup.Students)
+                    {
+                        student.ClassGroupId = null;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                _context.ClassGroups.Remove(classGroup);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted class group {ClassGroupId} with dependencies by admin {AdminId}", 
+                    id, User.Identity?.Name);
+
+                TempData["SuccessMessage"] = "Класът е изтрит успешно заедно с всички зависимости!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting class group {ClassGroupId} with dependencies", id);
+                TempData["ErrorMessage"] = "Грешка при изтриване на класа.";
+            }
+
+            return RedirectToAction(nameof(ClassGroups));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteModuleWithDependencies(int id)
+        {
+            try
+            {
+                var module = await _context.SubjectModules
+                    .Include(sm => sm.Assignments)
+                        .ThenInclude(a => a.TestCases)
+                    .Include(sm => sm.Assignments)
+                        .ThenInclude(a => a.Submissions)
+                    .FirstOrDefaultAsync(sm => sm.Id == id);
+
+                if (module == null)
+                {
+                    return NotFound();
+                }
+
+                var assignments = module.Assignments.ToList();
+                var testCases = assignments.SelectMany(a => a.TestCases).ToList();
+                var submissions = assignments.SelectMany(a => a.Submissions).ToList();
+
+                // Първо изтриваме свързаните данни
+                if (submissions.Any())
+                {
+                    var executionResults = await _context.ExecutionResults
+                        .Where(er => submissions.Select(s => s.Id).Contains(er.SubmissionId))
+                        .ToListAsync();
+                    _context.ExecutionResults.RemoveRange(executionResults);
+                }
+
+                _context.Submissions.RemoveRange(submissions);
+                _context.TestCases.RemoveRange(testCases);
+                _context.Assignments.RemoveRange(assignments);
+                _context.SubjectModules.Remove(module);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted module {ModuleId} with all dependencies by admin {AdminId}", 
+                    id, User.Identity?.Name);
+
+                TempData["SuccessMessage"] = $"Модулът е изтрит успешно заедно с {assignments.Count} задачи, {testCases.Count} тестови случая и {submissions.Count} решения!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting module {ModuleId} with dependencies", id);
+                TempData["ErrorMessage"] = "Грешка при изтриване на модула.";
+            }
+
+            return RedirectToAction(nameof(Modules));
         }
         #endregion
     }

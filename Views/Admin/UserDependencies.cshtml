@@ -1,0 +1,507 @@
+@model CodeGrade.ViewModels.UserDependenciesViewModel
+@{
+    ViewData["Title"] = "Зависимости на потребителя";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-link text-info me-2"></i>
+                Зависимости на потребителя
+            </h1>
+            <p class="text-muted mb-0">Преглед на данните, свързани с потребителя преди изтриване</p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-secondary btn-lg shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>
+            Назад към списъка
+        </a>
+    </div>
+
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Users", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-users me-1"></i>Потребители
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-link me-1"></i>Зависимости
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Success/Error/Warning/Info Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- User Information Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-info text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Информация за потребителя
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Име:</label>
+                                <span class="ms-2">@Model.UserName</span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Имейл:</label>
+                                <span class="ms-2">@Model.UserEmail</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Тип:</label>
+                                <span class="ms-2">
+                                    @if (Model.Dependencies.IsStudent && Model.Dependencies.IsTeacher)
+                                    {
+                                        <span class="badge bg-warning">Студент + Учител</span>
+                                    }
+                                    else if (Model.Dependencies.IsStudent)
+                                    {
+                                        <span class="badge bg-info">Студент</span>
+                                    }
+                                    else if (Model.Dependencies.IsTeacher)
+                                    {
+                                        <span class="badge bg-warning">Учител</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Потребител</span>
+                                    }
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Общо зависимости:</label>
+                                <span class="ms-2 badge bg-primary">@(Model.Dependencies.GradesCount + Model.Dependencies.SubmissionsCount + Model.Dependencies.ExecutionResultsCount + Model.Dependencies.AssignmentsCount)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependencies Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Внимание:</strong> Този потребител не може да бъде изтрит, тъй като има прикачени данни в системата.
+                <br />
+                <strong>Зависимости:</strong> @Model.Dependencies.GetDependenciesSummary()
+            </div>
+        </div>
+    </div>
+
+    <!-- Grades Section -->
+    @if (Model.Grades.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>
+                            Оценки (@Model.Grades.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Задача</th>
+                                        <th>Точки</th>
+                                        <th>Оценка</th>
+                                        <th>Дата на оценяване</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var grade in Model.Grades)
+                                    {
+                                        <tr>
+                                            <td><code>@grade.Id</code></td>
+                                            <td>@grade.AssignmentName</td>
+                                            <td><span class="badge bg-primary">@grade.Points</span></td>
+                                            <td>
+                                                @if (grade.GradeValue.HasValue)
+                                                {
+                                                    <span class="badge bg-success">@grade.GradeValue</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>@grade.GradedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Submissions Section -->
+    @if (Model.Submissions.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-code me-2"></i>
+                            Решения (@Model.Submissions.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Задача</th>
+                                        <th>Статус</th>
+                                        <th>Резултат</th>
+                                        <th>Дата на подаване</th>
+                                        <th>Резултати от изпълнение</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var submission in Model.Submissions)
+                                    {
+                                        <tr>
+                                            <td><code>@submission.Id</code></td>
+                                            <td>@submission.AssignmentName</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = submission.Status switch
+                                                    {
+                                                        "Completed" => "bg-success",
+                                                        "Pending" => "bg-warning",
+                                                        "Compiling" => "bg-info",
+                                                        "Running" => "bg-primary",
+                                                        "CompilationError" => "bg-danger",
+                                                        "RuntimeError" => "bg-danger",
+                                                        "TimeLimitExceeded" => "bg-warning",
+                                                        "MemoryLimitExceeded" => "bg-warning",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@submission.Status</span>
+                                            </td>
+                                            <td><span class="badge bg-primary">@submission.Score</span></td>
+                                            <td>@submission.SubmittedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td><span class="badge bg-info">@submission.ExecutionResultsCount</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Assignments Section -->
+    @if (Model.Assignments.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-warning text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tasks me-2"></i>
+                            Създадени задачи (@Model.Assignments.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Заглавие</th>
+                                        <th>Модул</th>
+                                        <th>Дата на създаване</th>
+                                        <th>Краен срок</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var assignment in Model.Assignments)
+                                    {
+                                        <tr>
+                                            <td><code>@assignment.Id</code></td>
+                                            <td>@assignment.Title</td>
+                                            <td>@assignment.SubjectModuleName</td>
+                                            <td>@assignment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>
+                                                @if (assignment.DueDate.HasValue)
+                                                {
+                                                    @assignment.DueDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Actions Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Опции за изтриване:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-arrow-right text-danger me-2"></i>
+                                    <strong>Изтриване на всички зависимости:</strong> Ще изтрие всички свързани данни
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-arrow-right text-danger me-2"></i>
+                                    <strong>Архивиране:</strong> Преместване в архив вместо изтриване
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-arrow-right text-danger me-2"></i>
+                                    <strong>Деактивиране:</strong> Потребителят остава, но не може да влиза
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Препоръки:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Деактивирайте</strong> потребителя вместо да го изтривате
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Архивирайте</strong> данните, ако са важни
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Свържете се</strong> с администратора на системата
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <a asp-action="EditUser" asp-route-id="@Model.UserId" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Редактирай потребителя
+                        </a>
+                        <button type="button" class="btn btn-warning" onclick="deactivateUser('@Model.UserId')">
+                            <i class="fas fa-user-slash me-2"></i>Деактивирай
+                        </button>
+                        <a asp-action="Users" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Назад към списъка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Dependencies Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash me-2"></i>
+                        Изтриване на зависимости
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Внимание:</strong> Изтриването на зависимости е необратимо! След като изтриете всички зависимости, ще можете да изтриете потребителя.
+                    </div>
+
+                    <div class="row">
+                        @if (Model.Dependencies.GradesCount > 0)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning">
+                                            <i class="fas fa-star me-2"></i>
+                                            Оценки (@Model.Dependencies.GradesCount)
+                                        </h6>
+                                        <p class="card-text small">Изтриване на всички оценки на потребителя</p>
+                                        <form asp-action="DeleteUserGrades" method="post" style="display: inline;">
+                                            <input type="hidden" name="userId" value="@Model.UserId" />
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                    onclick="return confirm('Сигурни ли сте, че искате да изтриете всички оценки?')">
+                                                <i class="fas fa-trash me-1"></i>Изтрий оценките
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.Dependencies.SubmissionsCount > 0)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary">
+                                            <i class="fas fa-code me-2"></i>
+                                            Решения (@Model.Dependencies.SubmissionsCount)
+                                        </h6>
+                                        <p class="card-text small">Изтриване на всички решения и резултати от изпълнение</p>
+                                        <form asp-action="DeleteUserSubmissions" method="post" style="display: inline;">
+                                            <input type="hidden" name="userId" value="@Model.UserId" />
+                                            <button type="submit" class="btn btn-outline-primary btn-sm" 
+                                                    onclick="return confirm('Сигурни ли сте, че искате да изтриете всички решения?')">
+                                                <i class="fas fa-trash me-1"></i>Изтрий решенията
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.Dependencies.AssignmentsCount > 0)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning">
+                                            <i class="fas fa-tasks me-2"></i>
+                                            Задачи (@Model.Dependencies.AssignmentsCount)
+                                        </h6>
+                                        <p class="card-text small">Изтриване на всички създадени задачи и свързани данни</p>
+                                        <form asp-action="DeleteUserAssignments" method="post" style="display: inline;">
+                                            <input type="hidden" name="userId" value="@Model.UserId" />
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                    onclick="return confirm('Сигурни ли сте, че искате да изтриете всички задачи?')">
+                                                <i class="fas fa-trash me-1"></i>Изтрий задачите
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model.Dependencies.HasDependencies)
+                    {
+                        <div class="text-center mt-3">
+                            <form asp-action="DeleteAllUserDependencies" method="post" style="display: inline;">
+                                <input type="hidden" name="userId" value="@Model.UserId" />
+                                <button type="submit" class="btn btn-danger btn-lg" 
+                                        onclick="return confirm('ВНИМАНИЕ: Това ще изтрие ВСИЧКИ зависимости наведнъж! Сигурни ли сте?')">
+                                    <i class="fas fa-trash-alt me-2"></i>
+                                    Изтрий ВСИЧКИ зависимости
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center mt-3">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>Отлично!</strong> Всички зависимости са премахнати. Сега можете да изтриете потребителя.
+                            </div>
+                            <form asp-action="DeleteUser" method="post" style="display: inline;">
+                                <input type="hidden" name="id" value="@Model.UserId" />
+                                <button type="submit" class="btn btn-danger btn-lg" 
+                                        onclick="return confirm('Сигурни ли сте, че искате да изтриете потребителя @Model.UserName?')">
+                                    <i class="fas fa-user-times me-2"></i>
+                                    Изтрий потребителя
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deactivateUser(userId) {
+            if (confirm('Сигурни ли сте, че искате да деактивирате този потребител?')) {
+                // Тук може да добавите AJAX заявка за деактивиране
+                alert('Функцията за деактивиране ще бъде имплементирана скоро.');
+            }
+        }
+    </script>
+}

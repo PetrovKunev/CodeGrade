@@ -5,99 +5,179 @@
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Създаване на нов потребител</h1>
-        <a asp-action="Users" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Назад към списъка
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-plus text-primary me-2"></i>
+                Създаване на нов потребител
+            </h1>
+            <p class="text-muted mb-0">Добавете нов потребител в системата</p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-secondary btn-lg shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>
+            Назад към списъка
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Информация за потребителя</h6>
-        </div>
-        <div class="card-body">
-            <form asp-action="CreateUser" method="post">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label">Име *</label>
-                            <input asp-for="FirstName" class="form-control" />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label">Фамилия *</label>
-                            <input asp-for="LastName" class="form-control" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Users", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-users me-1"></i>Потребители
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-user-plus me-1"></i>Нов потребител
+            </li>
+        </ol>
+    </nav>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Имейл *</label>
-                            <input asp-for="Email" type="email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="UserName" class="form-label">Потребителско име *</label>
-                            <input asp-for="UserName" class="form-control" />
-                            <span asp-validation-for="UserName" class="text-danger"></span>
-                        </div>
-                    </div>
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        Информация за потребителя
+                    </h5>
                 </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateUser" method="post">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    Лична информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="FirstName" class="form-control" placeholder="Въведете име" />
+                                    <label asp-for="FirstName">
+                                        <i class="fas fa-user me-1"></i>Име *
+                                    </label>
+                                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="LastName" class="form-control" placeholder="Въведете фамилия" />
+                                    <label asp-for="LastName">
+                                        <i class="fas fa-user me-1"></i>Фамилия *
+                                    </label>
+                                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label">Парола *</label>
-                            <input asp-for="Password" type="password" class="form-control" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-address-book me-2"></i>
+                                    Контактна информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="Въведете имейл" />
+                                    <label asp-for="Email">
+                                        <i class="fas fa-envelope me-1"></i>Имейл *
+                                    </label>
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Въведете телефон" />
+                                    <label asp-for="PhoneNumber">
+                                        <i class="fas fa-phone me-1"></i>Телефон
+                                    </label>
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="ConfirmPassword" class="form-label">Потвърди парола *</label>
-                            <input asp-for="ConfirmPassword" type="password" class="form-control" />
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Телефон</label>
-                            <input asp-for="PhoneNumber" class="form-control" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-key me-2"></i>
+                                    Информация за акаунта
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="UserName" class="form-control" placeholder="Въведете потребителско име" />
+                                    <label asp-for="UserName">
+                                        <i class="fas fa-at me-1"></i>Потребителско име *
+                                    </label>
+                                    <span asp-validation-for="UserName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="Role" class="form-select">
+                                        <option value="">Изберете роля</option>
+                                        @foreach (var role in Model.AvailableRoles)
+                                        {
+                                            <option value="@role">@role</option>
+                                        }
+                                    </select>
+                                    <label asp-for="Role">
+                                        <i class="fas fa-user-tag me-1"></i>Роля *
+                                    </label>
+                                    <span asp-validation-for="Role" class="text-danger small"></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Role" class="form-label">Роля *</label>
-                            <select asp-for="Role" class="form-select">
-                                <option value="">Избери роля</option>
-                                @foreach (var role in Model.AvailableRoles)
-                                {
-                                    <option value="@role">@role</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Role" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="d-flex justify-content-end">
-                    <a asp-action="Users" class="btn btn-secondary me-2">Отказ</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Създай потребител
-                    </button>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Парола
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Password" type="password" class="form-control" placeholder="Въведете парола" />
+                                    <label asp-for="Password">
+                                        <i class="fas fa-lock me-1"></i>Парола *
+                                    </label>
+                                    <span asp-validation-for="Password" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Потвърдете паролата" />
+                                    <label asp-for="ConfirmPassword">
+                                        <i class="fas fa-lock me-1"></i>Потвърди парола *
+                                    </label>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Полетата маркирани с * са задължителни
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Users" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Отказ
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                    <i class="fas fa-save me-2"></i>Създай потребител
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

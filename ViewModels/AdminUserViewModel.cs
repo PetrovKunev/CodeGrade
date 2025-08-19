@@ -97,4 +97,72 @@ namespace CodeGrade.ViewModels
         
         public List<string> AvailableRoles { get; set; } = new List<string> { "Student", "Teacher", "Admin" };
     }
+
+    public class UserDependenciesViewModel
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string UserEmail { get; set; } = string.Empty;
+        public UserDependenciesInfo Dependencies { get; set; } = new();
+        public List<GradeInfo> Grades { get; set; } = new();
+        public List<SubmissionInfo> Submissions { get; set; } = new();
+        public List<AssignmentInfo> Assignments { get; set; } = new();
+    }
+
+    public class GradeInfo
+    {
+        public int Id { get; set; }
+        public string AssignmentName { get; set; } = string.Empty;
+        public int Points { get; set; }
+        public decimal? GradeValue { get; set; }
+        public DateTime GradedAt { get; set; }
+    }
+
+    public class SubmissionInfo
+    {
+        public int Id { get; set; }
+        public string AssignmentName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public int Score { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public int ExecutionResultsCount { get; set; }
+    }
+
+    public class AssignmentInfo
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string SubjectModuleName { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? DueDate { get; set; }
+    }
+
+    public class UserDependenciesInfo
+    {
+        public bool IsStudent { get; set; }
+        public bool IsTeacher { get; set; }
+        public int GradesCount { get; set; }
+        public int SubmissionsCount { get; set; }
+        public int ExecutionResultsCount { get; set; }
+        public int AssignmentsCount { get; set; }
+
+        public bool HasDependencies => 
+            GradesCount > 0 || SubmissionsCount > 0 || ExecutionResultsCount > 0 || AssignmentsCount > 0;
+
+        public string GetDependenciesSummary()
+        {
+            var parts = new List<string>();
+            
+            if (GradesCount > 0)
+                parts.Add($"{GradesCount} оценки");
+            if (SubmissionsCount > 0)
+                parts.Add($"{SubmissionsCount} решения");
+            if (ExecutionResultsCount > 0)
+                parts.Add($"{ExecutionResultsCount} резултати от изпълнение");
+            if (AssignmentsCount > 0)
+                parts.Add($"{AssignmentsCount} задачи");
+
+            return string.Join(", ", parts);
+        }
+    }
 }

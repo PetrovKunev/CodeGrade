@@ -4,62 +4,338 @@
 }
 
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Редактиране на клас</h1>
-        <a asp-action="ClassGroups" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Назад към списъка
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-edit text-warning me-2"></i>
+                Редактиране на клас
+            </h1>
+            <p class="text-muted mb-0">Променете информацията за класа</p>
+        </div>
+        <a asp-action="ClassGroups" class="btn btn-outline-secondary btn-lg shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>
+            Назад към списъка
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Информация за класа</h6>
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("ClassGroups", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-users-cog me-1"></i>Класове
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-edit me-1"></i>Редактиране
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Main Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users-cog me-2"></i>
+                        Информация за класа
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditClassGroup" method="post" id="editClassGroupForm">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <!-- Basic Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Основна информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Name" class="form-control" placeholder="Въведете име на класа" />
+                                    <label asp-for="Name">
+                                        <i class="fas fa-users me-1"></i>Име на класа *
+                                    </label>
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        Например: 10А, 11Б, 12В
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="Year" class="form-select">
+                                        <option value="">Изберете година</option>
+                                        @for (int year = DateTime.Now.Year; year >= DateTime.Now.Year - 5; year--)
+                                        {
+                                            <option value="@year">@year - @(year + 1)</option>
+                                        }
+                                    </select>
+                                    <label asp-for="Year">
+                                        <i class="fas fa-calendar me-1"></i>Учебна година *
+                                    </label>
+                                    <span asp-validation-for="Year" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-align-left me-2"></i>
+                                    Описание
+                                </h6>
+                                <div class="form-floating mb-3">
+                                    <textarea asp-for="Description" class="form-control" 
+                                              placeholder="Въведете описание на класа" 
+                                              style="height: 100px"></textarea>
+                                    <label asp-for="Description">
+                                        <i class="fas fa-info-circle me-1"></i>Описание на класа
+                                    </label>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        По желание - можете да добавите допълнителна информация за класа
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Полетата маркирани с * са задължителни
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="ClassGroups" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Отказ
+                                </a>
+                                <button type="submit" class="btn btn-warning btn-lg shadow-sm">
+                                    <i class="fas fa-save me-2"></i>Запази промените
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form asp-action="EditClassGroup" method="post">
-                <input type="hidden" asp-for="Id" />
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label">Име на класа *</label>
-                            <input asp-for="Name" class="form-control" placeholder="Например: 12А, 11Б" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <!-- Class Actions Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-tools me-2"></i>
+                        Действия с класа
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-info" onclick="viewStudents()">
+                                    <i class="fas fa-users me-2"></i>
+                                    Преглед на студентите
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="addStudents()">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Добавяне на студенти
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-primary" onclick="exportClassData()">
+                                    <i class="fas fa-download me-2"></i>
+                                    Експорт на данните
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deleteClass()">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Изтриване на класа
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Year" class="form-label">Година *</label>
-                            <select asp-for="Year" class="form-select">
-                                <option value="">Избери година</option>
-                                @for (int year = DateTime.Now.Year; year >= DateTime.Now.Year - 5; year--)
-                                {
-                                    <option value="@year" selected="@(year == Model.Year)">@year</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Year" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Statistics Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Статистика на класа
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-users fa-2x text-info mb-2"></i>
+                                <h5 class="text-info" id="studentCount">-</h5>
+                                <small class="text-muted">Студенти</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-book fa-2x text-success mb-2"></i>
+                                <h5 class="text-success" id="assignmentCount">-</h5>
+                                <small class="text-muted">Задания</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="fas fa-calendar fa-2x text-warning mb-2"></i>
+                                <h5 class="text-warning" id="activeYear">-</h5>
+                                <small class="text-muted">Активна година</small>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Описание</label>
-                    <textarea asp-for="Description" class="form-control" rows="3" 
-                              placeholder="Кратко описание на класа (по желание)"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
+    <!-- Help Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Помощ за редактиране
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Име на класа:</strong> Можете да промените името
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Учебна година:</strong> Промяната ще засегне всички студенти
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Описание:</strong> Добавете подробности за класа
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                    <strong>Внимание:</strong> Промяната на годината може да засегне студентите
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                    <strong>Внимание:</strong> Изтриването на класа е необратимо
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    <strong>Съвет:</strong> Проверете всички промени преди запазване
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="d-flex justify-content-end">
-                    <a asp-action="ClassGroups" class="btn btn-secondary me-2">Отказ</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Запази промените
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Add form validation styling
+            $('#editClassGroupForm').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Запазва се...');
+            });
+
+            // Load class statistics
+            loadClassStatistics();
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    $('#editClassGroupForm').submit();
+                }
+            });
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        function loadClassStatistics() {
+            // This would typically fetch data from the server
+            // For now, we'll show placeholder data
+            $('#studentCount').text('0');
+            $('#assignmentCount').text('0');
+            $('#activeYear').text('@Model.Year');
+        }
+
+        function viewStudents() {
+            showNotification('Функцията за преглед на студентите ще бъде имплементирана скоро', 'info');
+        }
+
+        function addStudents() {
+            showNotification('Функцията за добавяне на студенти ще бъде имплементирана скоро', 'info');
+        }
+
+        function exportClassData() {
+            showNotification('Функцията за експорт ще бъде имплементирана скоро', 'info');
+        }
+
+        function deleteClass() {
+            if (confirm('Сигурни ли сте, че искате да изтриете този клас? Това действие не може да бъде отменено!')) {
+                // Redirect to delete action
+                window.location.href = '@Url.Action("DeleteClassGroup")/@Model.Id';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'warning' ? 'alert-warning' : 
+                              type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('.container-fluid').prepend(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.alert('close');
+            }, 5000);
+        }
+
+        // Show keyboard shortcuts help
+        console.log('Keyboard shortcuts: Ctrl+S = Save changes');
+    </script>
 }

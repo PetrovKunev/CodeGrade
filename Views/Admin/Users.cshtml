@@ -4,16 +4,40 @@
 }
 
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Управление на потребители</h1>
-        <a asp-action="CreateUser" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Нов потребител
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-users text-primary me-2"></i>
+                Управление на потребители
+            </h1>
+            <p class="text-muted mb-0">Създаване, редактиране и управление на потребители в системата</p>
+        </div>
+        <a asp-action="CreateUser" class="btn btn-primary btn-lg shadow-sm">
+            <i class="fas fa-plus me-2"></i>
+            Нов потребител
         </a>
     </div>
 
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-users me-1"></i>Потребители
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Success/Error Messages -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
             @TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -21,74 +45,227 @@
 
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
             @TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Общо потребители
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Активни потребители
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(u => u.IsActive)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Студенти
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(u => u.Roles.Contains("Student"))</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Преподаватели
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count(u => u.Roles.Contains("Teacher"))</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table Card -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Списък на потребителите</h6>
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>
+                Списък на потребителите
+            </h6>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="exportToCSV()">
+                    <i class="fas fa-download me-1"></i>Експорт
+                </button>
+                <button type="button" class="btn btn-outline-info btn-sm" onclick="refreshTable()">
+                    <i class="fas fa-sync-alt me-1"></i>Обнови
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
-                    <thead>
+                <table class="table table-bordered table-hover" id="usersTable" width="100%" cellspacing="0">
+                    <thead class="table-light">
                         <tr>
-                            <th>Име</th>
-                            <th>Имейл</th>
-                            <th>Потребителско име</th>
-                            <th>Роли</th>
-                            <th>Статус</th>
-                            <th>Създаден</th>
-                            <th>Действия</th>
+                            <th class="text-center" style="width: 50px;">
+                                <i class="fas fa-hashtag text-muted"></i>
+                            </th>
+                            <th>
+                                <i class="fas fa-user me-1"></i>Име
+                            </th>
+                            <th>
+                                <i class="fas fa-envelope me-1"></i>Имейл
+                            </th>
+                            <th>
+                                <i class="fas fa-at me-1"></i>Потребителско име
+                            </th>
+                            <th>
+                                <i class="fas fa-user-tag me-1"></i>Роли
+                            </th>
+                            <th class="text-center">
+                                <i class="fas fa-toggle-on me-1"></i>Статус
+                            </th>
+                            <th>
+                                <i class="fas fa-calendar me-1"></i>Създаден
+                            </th>
+                            <th class="text-center" style="width: 150px;">
+                                <i class="fas fa-cogs me-1"></i>Действия
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var user in Model)
+                        @for (int i = 0; i < Model.Count; i++)
                         {
-                            <tr>
+                            var user = Model[i];
+                            <tr class="@(user.IsActive ? "" : "table-warning")">
+                                <td class="text-center text-muted">
+                                    <small>@(i + 1)</small>
+                                </td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-sm me-3">
-                                            <div class="avatar-title bg-primary rounded-circle">
+                                            <div class="avatar-title bg-primary rounded-circle text-white fw-bold">
                                                 @user.FirstName[0]@user.LastName[0]
                                             </div>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0">@user.FullName</h6>
-                                            <small class="text-muted">@user.PhoneNumber</small>
+                                            <h6 class="mb-0 fw-bold">@user.FullName</h6>
+                                            @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="fas fa-phone me-1"></i>@user.PhoneNumber
+                                                </small>
+                                            }
                                         </div>
                                     </div>
                                 </td>
-                                <td>@user.Email</td>
-                                <td>@user.UserName</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-envelope text-muted me-2"></i>
+                                        <span class="text-break">@user.Email</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code class="bg-light px-2 py-1 rounded">@user.UserName</code>
+                                </td>
                                 <td>
                                     @foreach (var role in user.Roles)
                                     {
-                                        <span class="badge bg-info me-1">@role</span>
+                                        var badgeClass = role switch
+                                        {
+                                            "Admin" => "bg-danger",
+                                            "Teacher" => "bg-warning",
+                                            "Student" => "bg-info",
+                                            _ => "bg-secondary"
+                                        };
+                                        <span class="badge @badgeClass me-1">
+                                            <i class="fas fa-user-tag me-1"></i>@role
+                                        </span>
                                     }
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     @if (user.IsActive)
                                     {
-                                        <span class="badge bg-success">Активен</span>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Активен
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">Неактивен</span>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Неактивен
+                                        </span>
                                     }
                                 </td>
-                                <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
                                 <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-calendar text-muted me-2"></i>
+                                        <span>@user.CreatedAt.ToString("dd.MM.yyyy")</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
                                     <div class="btn-group" role="group">
                                         <a asp-action="EditUser" asp-route-id="@user.Id" 
-                                           class="btn btn-sm btn-outline-primary">
+                                           class="btn btn-outline-primary btn-sm" 
+                                           title="Редактирай потребител">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteUser('@user.Id', '@user.FullName')">
+                                        <a asp-action="UserDependencies" asp-route-id="@user.Id" 
+                                           class="btn btn-outline-info btn-sm" 
+                                           title="Преглед на зависимостите">
+                                            <i class="fas fa-link"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-outline-danger btn-sm" 
+                                                onclick="deleteUser('@user.Id', '@user.FullName')"
+                                                title="Изтрий потребител">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -104,20 +281,37 @@
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Потвърждение за изтриване</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Потвърждение за изтриване
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Сигурни ли сте, че искате да изтриете потребителя <strong id="userNameToDelete"></strong>?</p>
-                <p class="text-danger">Това действие не може да бъде отменено!</p>
+                <div class="text-center mb-3">
+                    <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
+                    <h6 class="text-danger">Сигурни ли сте?</h6>
+                </div>
+                <p class="mb-2">Искате да изтриете потребителя:</p>
+                <div class="alert alert-warning">
+                    <strong id="userNameToDelete"></strong>
+                </div>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Внимание:</strong> Това действие не може да бъде отменено!
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Отказ
+                </button>
                 <form id="deleteForm" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Изтрий</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Изтрий
+                    </button>
                 </form>
             </div>
         </div>
@@ -127,20 +321,84 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Initialize DataTable with enhanced configuration
             $('#usersTable').DataTable({
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/bg.json'
                 },
-                order: [[0, 'asc']],
+                order: [[1, 'asc']],
                 pageLength: 25,
-                responsive: true
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: [0, 7] }, // Disable sorting for index and actions columns
+                    { className: 'text-center', targets: [0, 5, 7] }
+                ],
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                initComplete: function() {
+                    // Add custom styling to DataTable elements
+                    $('.dataTables_length select').addClass('form-select form-select-sm');
+                    $('.dataTables_filter input').addClass('form-control form-control-sm');
+                }
             });
+
+            // Add row hover effects
+            $('#usersTable tbody tr').hover(
+                function() { $(this).addClass('table-hover'); },
+                function() { $(this).removeClass('table-hover'); }
+            );
         });
 
         function deleteUser(userId, userName) {
             document.getElementById('userNameToDelete').textContent = userName;
             document.getElementById('deleteForm').action = '@Url.Action("DeleteUser")/' + userId;
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+            
+            // Show modal with animation
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
         }
+
+        function exportToCSV() {
+            // Simple CSV export functionality
+            const table = document.getElementById('usersTable');
+            const rows = table.querySelectorAll('tbody tr');
+            let csv = 'Име,Имейл,Потребителско име,Роли,Статус,Създаден\n';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 7) {
+                    const name = cells[1].textContent.trim();
+                    const email = cells[2].textContent.trim();
+                    const username = cells[3].textContent.trim();
+                    const roles = cells[4].textContent.trim();
+                    const status = cells[5].textContent.trim();
+                    const created = cells[6].textContent.trim();
+                    
+                    csv += `"${name}","${email}","${username}","${roles}","${status}","${created}"\n`;
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'users_export.csv';
+            link.click();
+        }
+
+        function refreshTable() {
+            location.reload();
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                window.location.href = '@Url.Action("CreateUser")';
+            }
+        });
+
+        // Show keyboard shortcuts help
+        console.log('Keyboard shortcuts: Ctrl+N = New User');
     </script>
 }

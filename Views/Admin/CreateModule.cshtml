@@ -4,60 +4,359 @@
 }
 
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Създаване на нов модул</h1>
-        <a asp-action="Modules" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Назад към списъка
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-plus-circle text-warning me-2"></i>
+                Създаване на нов модул
+            </h1>
+            <p class="text-muted mb-0">Добавете нов учебен модул в системата</p>
+        </div>
+        <a asp-action="Modules" class="btn btn-outline-secondary btn-lg shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>
+            Назад към списъка
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Информация за модула</h6>
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Modules", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-book-open me-1"></i>Модули
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-plus-circle me-1"></i>Нов модул
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Main Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book-open me-2"></i>
+                        Информация за модула
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateModule" method="post" id="createModuleForm">
+                        <!-- Basic Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Основна информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Name" class="form-control" placeholder="Въведете име на модула" />
+                                    <label asp-for="Name">
+                                        <i class="fas fa-book me-1"></i>Име на модула *
+                                    </label>
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        Например: Програмиране, Математика, Физика
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="Semester" class="form-select">
+                                        <option value="">Изберете семестър</option>
+                                        <option value="Първи">Първи семестър</option>
+                                        <option value="Втори">Втори семестър</option>
+                                        <option value="Трети">Трети семестър</option>
+                                        <option value="Четвърти">Четвърти семестър</option>
+                                        <option value="Пети">Пети семестър</option>
+                                        <option value="Шести">Шести семестър</option>
+                                        <option value="Седми">Седми семестър</option>
+                                        <option value="Осми">Осми семестър</option>
+                                    </select>
+                                    <label asp-for="Semester">
+                                        <i class="fas fa-calendar me-1"></i>Семестър *
+                                    </label>
+                                    <span asp-validation-for="Semester" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-align-left me-2"></i>
+                                    Описание
+                                </h6>
+                                <div class="form-floating mb-3">
+                                    <textarea asp-for="Description" class="form-control" 
+                                              placeholder="Въведете описание на модула" 
+                                              style="height: 100px"></textarea>
+                                    <label asp-for="Description">
+                                        <i class="fas fa-info-circle me-1"></i>Описание на модула
+                                    </label>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        По желание - можете да добавите подробно описание на модула
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Options Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-warning mb-3">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    Допълнителни опции
+                                </h6>
+                                <div class="card border-warning bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="autoCreateAssignments" />
+                                                    <label class="form-check-label fw-bold" for="autoCreateAssignments">
+                                                        <i class="fas fa-magic me-2"></i>
+                                                        Автоматично създаване на задания
+                                                    </label>
+                                                    <div class="form-text">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Ще се създадат основни задания за модула
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="sendNotifications" />
+                                                    <label class="form-check-label fw-bold" for="sendNotifications">
+                                                        <i class="fas fa-bell me-2"></i>
+                                                        Изпращане на известия
+                                                    </label>
+                                                    <div class="form-text">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Студентите ще получат известие за новия модул
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Полетата маркирани с * са задължителни
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Modules" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Отказ
+                                </a>
+                                <button type="submit" class="btn btn-warning btn-lg shadow-sm">
+                                    <i class="fas fa-save me-2"></i>Създай модул
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form asp-action="CreateModule" method="post">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label">Име на модула *</label>
-                            <input asp-for="Name" class="form-control" placeholder="Например: Програмиране, Математика" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Помощ за създаване на модул
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Име на модула:</strong> Кратко и ясно име
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Семестър:</strong> Определя кога се изучава модулът
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <strong>Описание:</strong> По желание за подробности
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    <strong>Съвет:</strong> Използвайте стандартни имена за модули
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    <strong>Съвет:</strong> Семестърът трябва да съответства на учебния план
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    <strong>Съвет:</strong> След създаването можете да добавите задания
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Semester" class="form-label">Семестър *</label>
-                            <select asp-for="Semester" class="form-select">
-                                <option value="">Избери семестър</option>
-                                @for (int semester = 1; semester <= 8; semester++)
-                                {
-                                    <option value="@semester">@semester</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Semester" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-warning mb-3">
+                        <i class="fas fa-bolt me-2"></i>
+                        Бързи действия
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-info" onclick="fillSampleData()">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Попълни с примерни данни
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" onclick="clearForm()">
+                                    <i class="fas fa-eraser me-2"></i>
+                                    Изчисти формата
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="showTemplates()">
+                                    <i class="fas fa-copy me-2"></i>
+                                    Шаблони за модули
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="importFromExcel()">
+                                    <i class="fas fa-file-excel me-2"></i>
+                                    Импорт от Excel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Описание</label>
-                    <textarea asp-for="Description" class="form-control" rows="4" 
-                              placeholder="Подробно описание на модула, целите и съдържанието (по желание)"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-
-                <div class="d-flex justify-content-end">
-                    <a asp-action="Modules" class="btn btn-secondary me-2">Отказ</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Създай модул
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Add form validation styling
+            $('#createModuleForm').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Създава се...');
+            });
+
+            // Auto-generate semester if not selected
+            if (!$('#Semester').val()) {
+                const currentMonth = new Date().getMonth();
+                if (currentMonth >= 0 && currentMonth < 6) {
+                    $('#Semester').val('Първи');
+                } else {
+                    $('#Semester').val('Втори');
+                }
+            }
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    $('#createModuleForm').submit();
+                }
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#createModuleForm').submit();
+                }
+            });
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        function fillSampleData() {
+            $('#Name').val('Програмиране на Java');
+            $('#Semester').val('Първи');
+            $('#Description').val('Основи на програмирането на Java. Включва синтаксис, обектно-ориентирано програмиране и основни алгоритми.');
+            
+            showNotification('Формата е попълнена с примерни данни', 'success');
+        }
+
+        function clearForm() {
+            if (confirm('Сигурни ли сте, че искате да изчистите формата?')) {
+                $('#createModuleForm')[0].reset();
+                // Reset semester to default
+                const currentMonth = new Date().getMonth();
+                if (currentMonth >= 0 && currentMonth < 6) {
+                    $('#Semester').val('Първи');
+                } else {
+                    $('#Semester').val('Втори');
+                }
+                showNotification('Формата е изчистена', 'info');
+            }
+        }
+
+        function showTemplates() {
+            showNotification('Функцията за шаблони ще бъде имплементирана скоро', 'info');
+        }
+
+        function importFromExcel() {
+            showNotification('Функцията за импорт от Excel ще бъде имплементирана скоро', 'info');
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'warning' ? 'alert-warning' : 
+                              type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('.container-fluid').prepend(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.alert('close');
+            }, 5000);
+        }
+
+        // Show keyboard shortcuts help
+        console.log('Keyboard shortcuts: Ctrl+S = Submit form, Ctrl+Enter = Submit form');
+    </script>
 }

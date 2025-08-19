@@ -4,105 +4,350 @@
 }
 
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Редактиране на потребител</h1>
-        <a asp-action="Users" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Назад към списъка
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-user-edit text-primary me-2"></i>
+                Редактиране на потребител
+            </h1>
+            <p class="text-muted mb-0">Променете информацията за потребителя</p>
+        </div>
+        <a asp-action="Users" class="btn btn-outline-secondary btn-lg shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i>
+            Назад към списъка
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Информация за потребителя</h6>
-        </div>
-        <div class="card-body">
-            <form asp-action="EditUser" method="post">
-                <input type="hidden" asp-for="Id" />
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label">Име *</label>
-                            <input asp-for="FirstName" class="form-control" />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label">Фамилия *</label>
-                            <input asp-for="LastName" class="form-control" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light rounded p-3">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-home me-1"></i>Админ панел
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Users", "Admin")" class="text-decoration-none">
+                    <i class="fas fa-users me-1"></i>Потребители
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-user-edit me-1"></i>Редактиране
+            </li>
+        </ol>
+    </nav>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Имейл *</label>
-                            <input asp-for="Email" type="email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="UserName" class="form-label">Потребителско име *</label>
-                            <input asp-for="UserName" class="form-control" />
-                            <span asp-validation-for="UserName" class="text-danger"></span>
-                        </div>
-                    </div>
+    <!-- Main Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-cog me-2"></i>
+                        Информация за потребителя
+                    </h5>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Телефон</label>
-                            <input asp-for="PhoneNumber" class="form-control" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                <div class="card-body p-4">
+                    <form asp-action="EditUser" method="post" id="editUserForm">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <!-- Personal Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    Лична информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="FirstName" class="form-control" placeholder="Въведете име" />
+                                    <label asp-for="FirstName">
+                                        <i class="fas fa-user me-1"></i>Име *
+                                    </label>
+                                    <span asp-validation-for="FirstName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="LastName" class="form-control" placeholder="Въведете фамилия" />
+                                    <label asp-for="LastName">
+                                        <i class="fas fa-user me-1"></i>Фамилия *
+                                    </label>
+                                    <span asp-validation-for="LastName" class="text-danger small"></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">Роли</label>
-                            <div class="border rounded p-3">
-                                @for (int i = 0; i < Model.AvailableRoles.Count; i++)
-                                {
-                                    var role = Model.AvailableRoles[i];
-                                    var isChecked = Model.Roles.Contains(role);
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               name="Roles" value="@role" id="role_@i"
-                                               @(isChecked ? "checked" : "") />
-                                        <label class="form-check-label" for="role_@i">
-                                            @role
-                                        </label>
+
+                        <!-- Contact Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-address-book me-2"></i>
+                                    Контактна информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="Въведете имейл" />
+                                    <label asp-for="Email">
+                                        <i class="fas fa-envelope me-1"></i>Имейл *
+                                    </label>
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="UserName" class="form-control" placeholder="Въведете потребителско име" />
+                                    <label asp-for="UserName">
+                                        <i class="fas fa-at me-1"></i>Потребителско име *
+                                    </label>
+                                    <span asp-validation-for="UserName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Допълнителна информация
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Въведете телефон" />
+                                    <label asp-for="PhoneNumber">
+                                        <i class="fas fa-phone me-1"></i>Телефон
+                                    </label>
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mt-4 pt-3">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                    <label asp-for="IsActive" class="form-check-label fw-bold">
+                                        <i class="fas fa-toggle-on me-2"></i>
+                                        Потребителят е активен
+                                    </label>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Неактивните потребители не могат да влизат в системата
                                     </div>
-                                }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Roles Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-user-tag me-2"></i>
+                                    Роли и права
+                                </h6>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Важно:</strong> Промяната на ролите може да повлияе на правата на потребителя в системата.
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            @for (int i = 0; i < Model.AvailableRoles.Count; i++)
+                                            {
+                                                var role = Model.AvailableRoles[i];
+                                                var isChecked = Model.Roles.Contains(role);
+                                                var roleIcon = role switch
+                                                {
+                                                    "Student" => "fas fa-graduation-cap",
+                                                    "Teacher" => "fas fa-chalkboard-teacher",
+                                                    "Admin" => "fas fa-user-shield",
+                                                    _ => "fas fa-user"
+                                                };
+                                                var roleColor = role switch
+                                                {
+                                                    "Student" => "text-info",
+                                                    "Teacher" => "text-warning",
+                                                    "Admin" => "text-danger",
+                                                    _ => "text-secondary"
+                                                };
+                                                
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               name="Roles" value="@role" id="role_@i"
+                                                               @(isChecked ? "checked" : "") />
+                                                        <label class="form-check-label fw-bold @roleColor" for="role_@i">
+                                                            <i class="@roleIcon me-2"></i>
+                                                            @role
+                                                        </label>
+                                                        @if (isChecked)
+                                                        {
+                                                            <div class="text-success small">
+                                                                <i class="fas fa-check-circle me-1"></i>
+                                                                Активна роля
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Полетата маркирани с * са задължителни
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Users" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Отказ
+                                </a>
+                                <button type="submit" class="btn btn-warning btn-lg shadow-sm">
+                                    <i class="fas fa-save me-2"></i>Запази промените
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Actions Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-tools me-2"></i>
+                        Действия с потребителя
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-info" onclick="resetPassword()">
+                                    <i class="fas fa-key me-2"></i>
+                                    Нулиране на парола
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" onclick="toggleUserStatus()">
+                                    <i class="fas fa-toggle-on me-2"></i>
+                                    Промяна на статус
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="viewUserHistory()">
+                                    <i class="fas fa-history me-2"></i>
+                                    История на действията
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deleteUser()">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Изтриване на потребителя
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input asp-for="IsActive" class="form-check-input" />
-                        <label asp-for="IsActive" class="form-check-label">
-                            Потребителят е активен
-                        </label>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end">
-                    <a asp-action="Users" class="btn btn-secondary me-2">Отказ</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Запази промените
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Add form validation styling
+            $('#editUserForm').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Запазва се...');
+            });
+
+            // Add role change confirmation
+            $('input[name="Roles"]').on('change', function() {
+                const role = $(this).val();
+                const isChecked = $(this).is(':checked');
+                
+                if (isChecked) {
+                    showNotification(`Роля "${role}" е добавена`, 'success');
+                } else {
+                    showNotification(`Роля "${role}" е премахната`, 'warning');
+                }
+            });
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    $('#editUserForm').submit();
+                }
+            });
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+
+        function resetPassword() {
+            if (confirm('Сигурни ли сте, че искате да нулирате паролата на този потребител?')) {
+                showNotification('Функцията за нулиране на парола ще бъде имплементирана скоро', 'info');
+            }
+        }
+
+        function toggleUserStatus() {
+            const isActiveCheckbox = $('#IsActive');
+            const newStatus = !isActiveCheckbox.is(':checked');
+            const statusText = newStatus ? 'активен' : 'неактивен';
+            
+            if (confirm(`Сигурни ли сте, че искате да направите потребителя ${statusText}?`)) {
+                isActiveCheckbox.prop('checked', newStatus);
+                showNotification(`Потребителят е направен ${statusText}`, 'success');
+            }
+        }
+
+        function viewUserHistory() {
+            showNotification('Функцията за преглед на историята ще бъде имплементирана скоро', 'info');
+        }
+
+        function deleteUser() {
+            if (confirm('Сигурни ли сте, че искате да изтриете този потребител? Това действие не може да бъде отменено!')) {
+                // Redirect to delete action
+                window.location.href = '@Url.Action("DeleteUser")/@Model.Id';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'warning' ? 'alert-warning' : 
+                              type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('.container-fluid').prepend(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.alert('close');
+            }, 5000);
+        }
+
+        // Show keyboard shortcuts help
+        console.log('Keyboard shortcuts: Ctrl+S = Save changes');
+    </script>
 }
