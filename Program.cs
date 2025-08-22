@@ -79,10 +79,11 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed database
-using (var scope = app.Services.CreateScope())
+// Seed database only in development
+if (app.Environment.IsDevelopment())
 {
-    await SeedData.Initialize(scope.ServiceProvider);
+    // Note: SeedData.cs has been removed for production
+    // Database will start clean with only the admin user you create manually
 }
 
 app.Run();
